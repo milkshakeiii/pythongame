@@ -59,7 +59,6 @@ class DisplayBoard:
         for x in range(43):
             for y in range(30):
                 self.paint_square(x, y)
-        return self.surface
 
     def paint_square(self, x, y, highlighted=False):
         self.surface.blit(self.surface_for_square(x, y, highlighted=highlighted),
