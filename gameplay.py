@@ -105,6 +105,9 @@ class Armament(Part):
     def energy_cost(self):
         return (1/self.quality) * self.size
 
+    def damage(self)
+        return 10
+
 @dataclass
 class Researcher(Part):
     def research_amount(self):
@@ -118,10 +121,10 @@ class EnergyCore(Part):
     current_energy: float
 
     def maximum_energy(self):
-        return self.size*100
+        return self.size*10
 
     def energy_recharge_per_turn(self):
-        return self.quality*100
+        return self.quality*10
 
 @dataclass
 class Armor(Part):

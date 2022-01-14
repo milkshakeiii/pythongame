@@ -1,0 +1,17 @@
+name: BigM_1
+size: 2
+production_cost: 0
+research_threshhold: 0
+part: armor
+	size: 2
+	quality: 0.5
+part: locomotor
+	size: 1
+	quality: 0.5
+	shape: bishop
+part: core
+	size: 2
+	quality: 0.5 
+part: producer
+	size: 3
+	quality: 0.7
