@@ -105,7 +105,7 @@ class Armament(Part):
     def energy_cost(self):
         return (1/self.quality) * self.size
 
-    def damage(self)
+    def damage(self):
         return 10
 
 @dataclass
