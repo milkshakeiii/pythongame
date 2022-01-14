@@ -16,7 +16,9 @@ IMAGE_DIRECTORY = "images/"
 
 
 def load_image_square(name, offset=(0, 0)):
-    full_image = pygame.image.load(IMAGE_DIRECTORY + name + ".png").convert()
+    full_image = pygame.image.load(IMAGE_DIRECTORY + name + ".png")
+    full_image.convert()
+    full_image.convert_alpha()
     square_rect = pygame.Rect(offset[0]*GRID_WIDTH,
                               offset[1]*GRID_HEIGHT,
                               GRID_WIDTH,
