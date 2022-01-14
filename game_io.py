@@ -12,6 +12,7 @@ def unit_prototype_from_file(team_name, unit_name):
     except:
         raise Exception("Error parsing file: " + filename)
 
+    image_name = None
     size = None
     production_cost = None
     research_threshhold = None
@@ -21,7 +22,9 @@ def unit_prototype_from_file(team_name, unit_name):
     part_shape_names = []
 
     for key, value in entries:
-        if key == "size":
+        if key == "image":
+            image_name = value
+        elif key == "size":
             try:
                 size = int(value)
             except:
@@ -116,5 +119,5 @@ def unit_prototype_from_file(team_name, unit_name):
             raise Exception("Unrecognized part name: " + part_name)
         parts.append(part)
     
-    prototype = Unit(coords=(-1, -1), parts=parts, owner_player_number=0)
+    prototype = Unit(image_name=image_name, coords=(-1, -1), size=size, parts=parts, owner_player_number=0)
     return prototype

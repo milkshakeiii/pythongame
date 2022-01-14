@@ -6,7 +6,20 @@ class Gameboard:
         self.squares = dict()
 
     def add_to_board(self, placeable):
-        self.squares[coords] = self.squares.get(coords, []) + [placeable]
+        size = placeable.size
+        for i in range(size):
+            for j in range(size):
+                coords = (placeable.coords[0]+i, placeable.coords[1]+j)
+                self.squares[coords] = self.squares.get(coords, []) + [placeable]
+
+    def remove_from_board(self, placeable):
+        size = placeable.size
+        for i in range(size):
+            for j in range(size):
+                coords = (placeable.coords[0]+i, placeable.coords[1]+j)
+                if not (placeable in self.squares[coords]):
+                    raise Exception("Expected placeable not found at " + coords)
+                self.squares[coords].remove(placeable)
 
 class ShapeType(ABC):
     @abstractmethod
@@ -54,7 +67,9 @@ class Queen(ShapeType):
 
 @dataclass
 class Placeable:
+    image_name: str
     coords: tuple
+    size: int
 
 @dataclass
 class ResourcePile(Placeable):

@@ -1,5 +1,7 @@
-import pygame, sys
-import ctypes
+import pygame
+import sys, ctypes
+import game_io
+import gameplay
 ctypes.windll.user32.SetProcessDPIAware()
 
 
@@ -13,14 +15,17 @@ GRID_HEIGHT = 30
 IMAGE_DIRECTORY = "images/"
 
 
-
-def load_image(name):
-    image = pygame.image.load(IMAGE_DIRECTORY + name + ".png").convert()
-    return image
+def load_image_square(name, offset=(0, 0)):
+    full_image = pygame.image.load(IMAGE_DIRECTORY + name + ".png").convert()
+    square_rect = pygame.Rect(offset[0]*GRID_WIDTH,
+                              offset[1]*GRID_HEIGHT,
+                              GRID_WIDTH,
+                              GRID_HEIGHT)
+    image_square = full_image.subsurface(square_rect)
+    return image_square
 
 
 class Display:
-    #self, string, pixel count, pixel count
     def __init__(self):
         self.screen = pygame.display.set_mode()
         self.play_screen = pygame.Surface(GAME_SHAPE)
@@ -39,10 +44,10 @@ class Display:
 class DisplayBoard:
     def __init__(self):
         self.surface = pygame.Surface(RIGHT_WINDOW_SHAPE)
-        self.squares = dict()
-        self.light_square = load_image("light_square")
-        self.dark_square = load_image("dark_square")
-        self.highlight_square = load_image("highlight_square")
+        self.squares = dict() # coords to list of images
+        self.light_square = load_image_square("light_square")
+        self.dark_square = load_image_square("dark_square")
+        self.highlight_square = load_image_square("highlight_square")
         self.highlighted_square = None
 
     def surface_for_square(self, x, y, highlighted=False):
@@ -52,7 +57,9 @@ class DisplayBoard:
             background_square = self.highlight_square
         surface.blit(background_square, (0, 0))
         if (x, y) in self.squares:
-            surface.blit(self.squares[(x, y)])
+            images = self.squares[(x, y)]
+            for image in images:
+                surface.blit(image, (0, 0))
         return surface
 
     def resurface(self):
@@ -78,6 +85,15 @@ class DisplayBoard:
                               highlighted=True)
         else:
             self.highlighted_square = None
+
+    def load_gameboard(self, gameboard):
+        for coords, placeables in gameboard.squares.items():
+            for placeable in placeables:
+                offset = (coords[0] - placeable.coords[0],
+                          coords[1] - placeable.coords[1])
+                image = load_image_square(placeable.image_name, offset)
+                self.squares[coords]= self.squares.get(coords, []) + [image]
+                
             
 
 
@@ -92,7 +108,13 @@ if __name__=='__main__':
     bottom_left_window = pygame.Surface(BOTTOM_LEFT_WINDOW_SHAPE)
     bottom_left_window.fill((30, 60, 30))
 
+    gameboard = gameplay.Gameboard()
+    test_unit = game_io.unit_prototype_from_file("test_team_1", "mothership_1")
+    test_unit.coords = (5, 5)
+    gameboard.add_to_board(test_unit)
+
     display_board = DisplayBoard()
+    display_board.load_gameboard(gameboard)
     display_board.resurface()
 
     display.draw()
