@@ -121,3 +121,14 @@ def unit_prototype_from_file(team_name, unit_name):
     
     prototype = Unit(image_name=image_name, coords=(-1, -1), size=size, parts=parts, owner_player_number=0)
     return prototype
+
+def resource_pile_factory(coords, amount):
+    image_name = "big_resource"
+    if amount < 60:
+        image_name = "medium_resource"
+    if amount < 30:
+        image_name = "small_resource"
+    return ResourcePile(image_name=image_name,
+                        coords=coords,
+                        size=1,
+                        amount=amount)

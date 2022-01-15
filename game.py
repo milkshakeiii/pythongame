@@ -73,7 +73,10 @@ class DisplayBoard:
         self.surface.blit(self.surface_for_square(x, y, highlighted=highlighted),
                           (x*GRID_WIDTH, y*GRID_HEIGHT))
 
-    def highlight(self, mouse_position):
+    '''
+    returns highlighted game grid coords
+    '''
+    def highlight(self, mouse_position) -> tuple:
         mouse_board_position = (mouse_position[0] - TOP_LEFT_WINDOW_SHAPE[0],
                                 mouse_position[1])
         if self.highlighted_square != None:
@@ -87,6 +90,7 @@ class DisplayBoard:
                               highlighted=True)
         else:
             self.highlighted_square = None
+        return self.highlighted_square
 
     def load_gameboard(self, gameboard):
         for coords, placeables in gameboard.squares.items():
@@ -97,20 +101,34 @@ class DisplayBoard:
                 self.squares[coords]= self.squares.get(coords, []) + [image]
                 
             
+class MouseoverWindow:
+    def __init__(self):
+        self.surface = pygame.Surface(TOP_LEFT_WINDOW_SHAPE)
+        self.surface.fill((60, 30, 30))
 
+    def draw_mouseover_info(self, gameboard, coords):
+        placeables = gameboard.squares.get(coords, [])
+        resources = 0
+        for placeable in placeables:
+            if type(placeable) is gameplay.ResourcePile:
+                resources = placeable.amount
+            elif type(placeable) is gameplay.Unit:
+                pass
+                
 
 
 if __name__=='__main__':
     pygame.init()
     display = Display()
 
-    top_left_window = pygame.Surface(TOP_LEFT_WINDOW_SHAPE)
-    top_left_window.fill((60, 30, 30))
+    mouseover_window = MouseoverWindow()
 
     bottom_left_window = pygame.Surface(BOTTOM_LEFT_WINDOW_SHAPE)
     bottom_left_window.fill((30, 60, 30))
 
     gameboard = gameplay.Gameboard()
+    test_resource = game_io.resource_pile_factory((6,6), 50)
+    gameboard.add_to_board(test_resource)
     test_unit = game_io.unit_prototype_from_file("test_team_1", "mothership_1")
     test_unit.coords = (5, 5)
     gameboard.add_to_board(test_unit)
@@ -125,9 +143,10 @@ if __name__=='__main__':
     while True:
 
         playzone_mouse = display.playzone_mouse(pygame.mouse.get_pos())
-        display_board.highlight(playzone_mouse)
+        highlighted_coords = display_board.highlight(playzone_mouse)
+        mouseover_window.draw_mouseover_info(gameboard, highlighted_coords)
 
-        display.play_screen.blit(top_left_window, (0, 0))
+        display.play_screen.blit(mouseover_window.surface, (0, 0))
         display.play_screen.blit(bottom_left_window,
                                  (0, TOP_LEFT_WINDOW_SHAPE[1]))
         display.play_screen.blit(display_board.surface,
