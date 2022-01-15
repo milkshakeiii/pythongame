@@ -89,6 +89,9 @@ class Part:
     def max_hp(self):
         return self.size*10*self.quality
 
+    def display_name(self):
+        raise Exception("display_name called on part superclass")
+
 @dataclass
 class Locomotor(Part):
     shape_type: ShapeType
@@ -98,6 +101,9 @@ class Locomotor(Part):
 
     def max_squares_traveled(self):
         return self.size*2
+
+    def display_name(self):
+        return "Locomotor"
 
 @dataclass
 class Collector(Part):
@@ -109,6 +115,9 @@ class Collector(Part):
 
     def energy_per_unit_removed(self):
         return (1/self.quality)
+
+    def display_name(self):
+        return "Collector"
         
 @dataclass
 class Armament(Part):
@@ -123,6 +132,9 @@ class Armament(Part):
     def damage(self):
         return 10
 
+    def display_name(self):
+        return "Armament"
+
 @dataclass
 class Researcher(Part):
     def research_amount(self):
@@ -130,6 +142,9 @@ class Researcher(Part):
 
     def energy_cost(self):
         return (1/self.quality) * self.size
+
+    def display_name(self):
+        return "Researcher"
 
 @dataclass
 class EnergyCore(Part):
@@ -141,9 +156,13 @@ class EnergyCore(Part):
     def energy_recharge_per_turn(self):
         return self.quality*10
 
+    def display_name(self):
+        return "Core"
+
 @dataclass
 class Armor(Part):
-    pass
+    def display_name(self):
+        return "Armor"
 
 @dataclass
 class Producer(Part):
@@ -156,4 +175,7 @@ class Producer(Part):
 
     def points_per_activation(self):
         return self.size
+
+    def display_name(self):
+        return "Producer"
     

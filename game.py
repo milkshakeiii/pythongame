@@ -4,7 +4,8 @@ import game_io
 import gameplay
 ctypes.windll.user32.SetProcessDPIAware()
 
-
+pygame.font.init()
+DEFAULT_FONT = pygame.font.SysFont('Ariel', 32)
 
 GAME_SHAPE = (1600, 900)
 TOP_LEFT_WINDOW_SHAPE = (310, 600)
@@ -14,11 +15,14 @@ GRID_WIDTH = 30
 GRID_HEIGHT = 30
 IMAGE_DIRECTORY = "images/"
 
-
-def load_image_square(name, offset=(0, 0)):
+def load_whole_image(name):
     full_image = pygame.image.load(IMAGE_DIRECTORY + name + ".png")
     full_image.convert()
     full_image.convert_alpha()
+    return full_image
+
+def load_image_square(name, offset=(0, 0)):
+    full_image = load_whole_image(name)
     square_rect = pygame.Rect(offset[0]*GRID_WIDTH,
                               offset[1]*GRID_HEIGHT,
                               GRID_WIDTH,
@@ -104,17 +108,49 @@ class DisplayBoard:
 class MouseoverWindow:
     def __init__(self):
         self.surface = pygame.Surface(TOP_LEFT_WINDOW_SHAPE)
-        self.surface.fill((60, 30, 30))
+        self.resource_image = load_whole_image("big_resource")
 
     def draw_mouseover_info(self, gameboard, coords):
+        self.surface.fill((60, 30, 30))
         placeables = gameboard.squares.get(coords, [])
         resources = 0
+        unit = None
         for placeable in placeables:
             if type(placeable) is gameplay.ResourcePile:
                 resources = placeable.amount
             elif type(placeable) is gameplay.Unit:
-                pass
-                
+                unit = placeable
+        if (unit != None):
+            image = load_whole_image(unit.image_name)
+            self.surface.blit(image, (20, 20))
+            parts = unit.parts
+            y=200
+            for part in parts:
+                size_text = DEFAULT_FONT.render(str(part.size),
+                                                False,
+                                                (255, 255, 255))
+                quality_string = "%6.2f" % (part.quality)
+                quality_text = DEFAULT_FONT.render(quality_string,
+                                                   False,
+                                                   (255, 255, 255))
+                type_text = DEFAULT_FONT.render(part.display_name(),
+                                                False,
+                                                (255, 255, 255))
+                #hp_string = part.max_hp()-part.damage
+                #hp_text = DEFAULT_FONT.render(hp_string,
+                                              #False,
+                                              #(255, 255, 255))
+                self.surface.blit(size_text, (10, y))
+                self.surface.blit(quality_text, (40, y))
+                self.surface.blit(type_text, (110, y))
+                y+=30
+        if (resources != 0):
+            self.surface.blit(self.resource_image, (210, 170))
+            resource_text = DEFAULT_FONT.render("x " + str(resources),
+                                                False,
+                                                (255, 255, 255))
+            self.surface.blit(resource_text, (250, 182))
+        
 
 
 if __name__=='__main__':
