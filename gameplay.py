@@ -21,6 +21,8 @@ class Gameboard:
                     raise Exception("Expected placeable not found at " + coords)
                 self.squares[coords].remove(placeable)
 
+
+
 class ShapeType(ABC):
     @abstractmethod
     def possible_squares(self, origin_unit):
@@ -87,7 +89,7 @@ class Part:
     damage: int
 
     def max_hp(self):
-        return self.size*10*self.quality
+        return int(self.size*10*self.quality)
 
     def display_name(self):
         raise Exception("display_name called on part superclass")

@@ -136,20 +136,22 @@ class MouseoverWindow:
                 type_text = DEFAULT_FONT.render(part.display_name(),
                                                 False,
                                                 (255, 255, 255))
-                #hp_string = part.max_hp()-part.damage
-                #hp_text = DEFAULT_FONT.render(hp_string,
-                                              #False,
-                                              #(255, 255, 255))
+                current_hp_string = str(part.max_hp()-part.damage)
+                hp_string = current_hp_string + "/" + str(part.max_hp())
+                hp_text = DEFAULT_FONT.render(hp_string,
+                                              False,
+                                              (255, 255, 255))
                 self.surface.blit(size_text, (10, y))
                 self.surface.blit(quality_text, (40, y))
                 self.surface.blit(type_text, (110, y))
+                self.surface.blit(hp_text, (240, y))
                 y+=30
         if (resources != 0):
-            self.surface.blit(self.resource_image, (210, 170))
+            self.surface.blit(self.resource_image, (210, 160))
             resource_text = DEFAULT_FONT.render("x " + str(resources),
                                                 False,
                                                 (255, 255, 255))
-            self.surface.blit(resource_text, (250, 182))
+            self.surface.blit(resource_text, (250, 170))
         
 
 
