@@ -21,7 +21,26 @@ class Gameboard:
                     raise Exception("Expected placeable not found at " + coords)
                 self.squares[coords].remove(placeable)
 
+class Gamestate:
+    def __init__(self, gameboard):
+        self.gameboard = gameboard
+        self.players = []
 
+class Player:
+    def __init__(self,
+                 player_number,
+                 team_number,
+                 unit_prototypes,
+                 resource_amount = 0,
+                 research_amount = 0.00):
+        self.player_number = player_number
+        self.team_number = team_number
+        self.unit_prototypes = unit_prototypes
+        self.resource_amount = resource_amount
+        self.research_amount = research_amount
+
+    def research_fraction(self):
+        return 1-(199/200)**self.research_amount
 
 class ShapeType(ABC):
     @abstractmethod

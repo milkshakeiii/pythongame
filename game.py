@@ -1,5 +1,5 @@
 import pygame
-import sys, ctypes
+import sys, os, ctypes
 import game_io
 import gameplay
 ctypes.windll.user32.SetProcessDPIAware()
@@ -16,7 +16,8 @@ GRID_HEIGHT = 30
 IMAGE_DIRECTORY = "images/"
 
 def load_whole_image(name):
-    full_image = pygame.image.load(IMAGE_DIRECTORY + name + ".png")
+    filename = os.path.join(IMAGE_DIRECTORY, name + ".png")
+    full_image = pygame.image.load(filename)
     full_image.convert()
     full_image.convert_alpha()
     return full_image
@@ -121,37 +122,98 @@ class MouseoverWindow:
             elif type(placeable) is gameplay.Unit:
                 unit = placeable
         if (unit != None):
-            image = load_whole_image(unit.image_name)
-            self.surface.blit(image, (20, 20))
-            parts = unit.parts
-            y=200
-            for part in parts:
-                size_text = DEFAULT_FONT.render(str(part.size),
-                                                False,
-                                                (255, 255, 255))
-                quality_string = "%6.2f" % (part.quality)
-                quality_text = DEFAULT_FONT.render(quality_string,
-                                                   False,
-                                                   (255, 255, 255))
-                type_text = DEFAULT_FONT.render(part.display_name(),
-                                                False,
-                                                (255, 255, 255))
-                current_hp_string = str(part.max_hp()-part.damage)
-                hp_string = current_hp_string + "/" + str(part.max_hp())
-                hp_text = DEFAULT_FONT.render(hp_string,
-                                              False,
-                                              (255, 255, 255))
-                self.surface.blit(size_text, (10, y))
-                self.surface.blit(quality_text, (40, y))
-                self.surface.blit(type_text, (110, y))
-                self.surface.blit(hp_text, (240, y))
-                y+=30
+            self.draw_unit_info(unit)
         if (resources != 0):
             self.surface.blit(self.resource_image, (210, 160))
             resource_text = DEFAULT_FONT.render("x " + str(resources),
                                                 False,
                                                 (255, 255, 255))
             self.surface.blit(resource_text, (250, 170))
+
+    def draw_unit_info(self, unit):
+        image = load_whole_image(unit.image_name)
+        self.surface.blit(image, (20, 20))
+        parts = unit.parts
+        y=200
+        for part in parts:
+            size_text = DEFAULT_FONT.render(str(part.size),
+                                            False,
+                                            (255, 255, 255))
+            quality_string = "%6.2f" % (part.quality)
+            quality_text = DEFAULT_FONT.render(quality_string,
+                                               False,
+                                               (255, 255, 255))
+            type_text = DEFAULT_FONT.render(part.display_name(),
+                                            False,
+                                            (255, 255, 255))
+            current_hp_string = str(part.max_hp()-part.damage)
+            hp_string = current_hp_string + "/" + str(part.max_hp())
+            hp_text = DEFAULT_FONT.render(hp_string,
+                                          False,
+                                          (255, 255, 255))
+            self.surface.blit(size_text, (10, y))
+            self.surface.blit(quality_text, (40, y))
+            self.surface.blit(type_text, (110, y))
+            self.surface.blit(hp_text, (240, y))
+            y+=30
+
+class ResearchWindow:
+
+    RESEARCH_BOX_SIZE = (155, 32)
+
+    def mouse_pos_to_box_coords(mouse_pos):
+        window_mouse_pos = (mouse_pos[0], mouse_pos[1]-TOP_LEFT_WINDOW_SHAPE[1])
+        return (window_mouse_pos[0]//RESEARCH_BOX_SIZE[0],
+                window_mouse_pos[1]//RESEARCH_BOX_SIZE[1])
+    
+    def __init__(self):
+        self.surface = pygame.Surface(BOTTOM_LEFT_WINDOW_SHAPE)
+        self.surface.fill((30, 60, 30))
+        progress_image = DEFAULT_FONT.render("Research Progress:",
+                                             False,
+                                             (255, 255, 255))
+        self.surface.blit(progress_image, (10, 10))
+        self.displayed_player = None
+        self.research_boxes = []
+        for i in range(6):
+            row = []
+            for j in range(2):
+                research_box = load_whole_image("research_box")
+                row.append(research_box)
+                self.surface.blit(research_box, (j*research_box.get_width(),
+                                                 40+i*research_box.get_height()))
+            self.research_boxes.append(row)
+
+        resources_image = DEFAULT_FONT.render("Resources Available:",
+                                              False,
+                                              (255, 255, 255))
+        self.surface.blit(resources_image, (10, 260))
+        
+        
+
+    '''
+    Returns a unit prototype if a unit is moused over, else None
+    '''
+    def mouseover_check(self):
+        pass
+
+    def draw_player_info(self, player):
+        self.displayed_player = player
+        
+        percentage_string = "{0:.1%}".format(player.research_fraction())
+        percentage_text = DEFAULT_FONT.render(percentage_string,
+                                              False,
+                                              (255, 255, 255))
+        self.surface.blit(percentage_text, (230, 10))
+
+        percentage_text = DEFAULT_FONT.render(str(player.resource_amount),
+                                              False,
+                                              (255, 255, 255))
+        self.surface.blit(percentage_text, (240, 260))
+        
+            
+            
+        
         
 
 
@@ -161,9 +223,8 @@ if __name__=='__main__':
 
     mouseover_window = MouseoverWindow()
 
-    bottom_left_window = pygame.Surface(BOTTOM_LEFT_WINDOW_SHAPE)
-    bottom_left_window.fill((30, 60, 30))
-
+    research_window = ResearchWindow()
+    
     gameboard = gameplay.Gameboard()
     test_resource = game_io.resource_pile_factory((6,6), 50)
     gameboard.add_to_board(test_resource)
@@ -177,6 +238,8 @@ if __name__=='__main__':
 
     display.draw()
 
+    player = gameplay.Player(0, 0, [test_unit], research_amount=20)
+    research_window.draw_player_info(player)
     
     while True:
 
@@ -185,7 +248,7 @@ if __name__=='__main__':
         mouseover_window.draw_mouseover_info(gameboard, highlighted_coords)
 
         display.play_screen.blit(mouseover_window.surface, (0, 0))
-        display.play_screen.blit(bottom_left_window,
+        display.play_screen.blit(research_window.surface,
                                  (0, TOP_LEFT_WINDOW_SHAPE[1]))
         display.play_screen.blit(display_board.surface,
                                  (TOP_LEFT_WINDOW_SHAPE[0], 0))
