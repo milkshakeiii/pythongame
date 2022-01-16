@@ -119,7 +119,14 @@ def unit_prototype_from_file(team_name, unit_name):
             raise Exception("Unrecognized part name: " + part_name)
         parts.append(part)
     
-    prototype = Unit(image_name=image_name, coords=(-1, -1), size=size, parts=parts, owner_player_number=0)
+    prototype = Unit(image_name=image_name,
+                     coords=(-1, -1),
+                     size=size,
+                     parts=parts,
+                     owner_player_number=0,
+                     unit_name=unit_name,
+                     production_cost=production_cost,
+                     research_threshhold=research_threshhold)
     return prototype
 
 def resource_pile_factory(coords, amount):

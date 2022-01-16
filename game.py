@@ -4,6 +4,7 @@ import game_io
 import gameplay
 ctypes.windll.user32.SetProcessDPIAware()
 
+
 pygame.font.init()
 DEFAULT_FONT = pygame.font.SysFont('Ariel', 32)
 
@@ -15,12 +16,14 @@ GRID_WIDTH = 30
 GRID_HEIGHT = 30
 IMAGE_DIRECTORY = "images/"
 
+
 def load_whole_image(name):
     filename = os.path.join(IMAGE_DIRECTORY, name + ".png")
     full_image = pygame.image.load(filename)
     full_image.convert()
     full_image.convert_alpha()
     return full_image
+
 
 def load_image_square(name, offset=(0, 0)):
     full_image = load_whole_image(name)
@@ -72,9 +75,9 @@ class DisplayBoard:
     def resurface(self):
         for x in range(43):
             for y in range(30):
-                self.paint_square(x, y)
+                self.draw_square(x, y)
 
-    def paint_square(self, x, y, highlighted=False):
+    def draw_square(self, x, y, highlighted=False):
         self.surface.blit(self.surface_for_square(x, y, highlighted=highlighted),
                           (x*GRID_WIDTH, y*GRID_HEIGHT))
 
@@ -85,14 +88,14 @@ class DisplayBoard:
         mouse_board_position = (mouse_position[0] - TOP_LEFT_WINDOW_SHAPE[0],
                                 mouse_position[1])
         if self.highlighted_square != None:
-            self.paint_square(self.highlighted_square[0],
+            self.draw_square(self.highlighted_square[0],
                               self.highlighted_square[1])
         if self.surface.get_rect().collidepoint(mouse_board_position):
             self.highlighted_square = (mouse_board_position[0]//GRID_WIDTH,
                                        mouse_board_position[1]//GRID_HEIGHT)
-            self.paint_square(self.highlighted_square[0],
-                              self.highlighted_square[1],
-                              highlighted=True)
+            self.draw_square(self.highlighted_square[0],
+                             self.highlighted_square[1],
+                             highlighted=True)
         else:
             self.highlighted_square = None
         return self.highlighted_square
@@ -130,6 +133,7 @@ class MouseoverWindow:
                                                 (255, 255, 255))
             self.surface.blit(resource_text, (250, 170))
 
+
     def draw_unit_info(self, unit):
         image = load_whole_image(unit.image_name)
         self.surface.blit(image, (20, 20))
@@ -157,45 +161,87 @@ class MouseoverWindow:
             self.surface.blit(hp_text, (240, y))
             y+=30
 
+
 class ResearchWindow:
-
-    RESEARCH_BOX_SIZE = (155, 32)
-
-    def mouse_pos_to_box_coords(mouse_pos):
-        window_mouse_pos = (mouse_pos[0], mouse_pos[1]-TOP_LEFT_WINDOW_SHAPE[1])
-        return (window_mouse_pos[0]//RESEARCH_BOX_SIZE[0],
-                window_mouse_pos[1]//RESEARCH_BOX_SIZE[1])
-    
     def __init__(self):
         self.surface = pygame.Surface(BOTTOM_LEFT_WINDOW_SHAPE)
         self.surface.fill((30, 60, 30))
         progress_image = DEFAULT_FONT.render("Research Progress:",
                                              False,
                                              (255, 255, 255))
-        self.surface.blit(progress_image, (10, 10))
-        self.displayed_player = None
-        self.research_boxes = []
-        for i in range(6):
-            row = []
-            for j in range(2):
-                research_box = load_whole_image("research_box")
-                row.append(research_box)
-                self.surface.blit(research_box, (j*research_box.get_width(),
-                                                 40+i*research_box.get_height()))
-            self.research_boxes.append(row)
-
         resources_image = DEFAULT_FONT.render("Resources Available:",
                                               False,
                                               (255, 255, 255))
         self.surface.blit(resources_image, (10, 260))
+        self.surface.blit(progress_image, (10, 10))
         
-        
+        self.research_box_surface = load_whole_image("research_box")
+        self.research_box_width = self.research_box_surface.get_width()
+        self.research_box_height = self.research_box_surface.get_height()
+        self.prototype_zone_offset = 40
+        self.research_boxes = []
+        self.prototypes = dict() # box row, column to Unit prototype
 
+    def research_box_position(self, row, column):
+        return (column*self.research_box_width,
+                self.prototype_zone_offset + row*self.research_box_height)
+
+    def build_box(self, row, column, player, highlight = False):
+        research_box = pygame.Surface((self.research_box_width,
+                                       self.research_box_height))
+        research_box.fill((90, 120, 90) if highlight else (30, 60, 30))
+        research_box.blit(load_whole_image("research_box"), (0, 0))
+
+        prototype = self.prototypes.get((row, column), None)
+        if (prototype != None):
+            name = prototype.unit_name
+            locked = player.research_fraction() < prototype.research_threshhold
+            color = (125, 125, 125) if locked else (255, 255, 255)
+            name_text = DEFAULT_FONT.render(name[:4],
+                                            False,
+                                            color)
+            research_string = "{0:.1%}".format(prototype.research_threshhold)
+            research_text = DEFAULT_FONT.render(research_string,
+                                                False,
+                                                (255, 255, 255))
+            cost_string = str(prototype.production_cost)
+            cost_text = DEFAULT_FONT.render(cost_string,
+                                            False,
+                                            (255, 255, 255))
+
+            research_box.blit(name_text, (2, 4))
+            research_box.blit(research_text, (60, 4))
+            research_box.blit(cost_text, (120, 4))
+        return research_box
+
+    def draw_boxes(self, player):
+        for i in range(6):
+            row = []
+            for j in range(2):
+                research_box = self.build_box(i, j, player)
+                position = self.research_box_position(i, j)
+                self.surface.blit(research_box, position)
+                row.append(research_box)
+                
+            self.research_boxes.append(row)
+        
     '''
     Returns a unit prototype if a unit is moused over, else None
     '''
-    def mouseover_check(self):
-        pass
+    def mouseover_check(self, mouse_pos):
+        research_pos = (mouse_pos[0],
+                        mouse_pos[1] - TOP_LEFT_WINDOW_SHAPE[1])
+        prototype_zone_mouse = (research_pos[0],
+                                research_pos[1] - self.prototype_zone_offset)
+        research_box_row = prototype_zone_mouse[1]//self.research_box_height
+        research_box_column = prototype_zone_mouse[0]//self.research_box_width
+
+        
+        
+        if (research_box_row, research_box_column) in self.prototypes:
+            return self.prototypes[(research_box_row, research_box_column)]
+        else:
+            return None
 
     def draw_player_info(self, player):
         self.displayed_player = player
@@ -206,24 +252,29 @@ class ResearchWindow:
                                               (255, 255, 255))
         self.surface.blit(percentage_text, (230, 10))
 
-        percentage_text = DEFAULT_FONT.render(str(player.resource_amount),
-                                              False,
-                                              (255, 255, 255))
-        self.surface.blit(percentage_text, (240, 260))
-        
-            
-            
-        
-        
+        resource_text = DEFAULT_FONT.render(str(player.resource_amount),
+                                            False,
+                                            (255, 255, 255))
+        self.surface.blit(resource_text, (240, 260))
 
+        for i in range(len(player.unit_prototypes)):
+            prototype = player.unit_prototypes[i]
+            box_coords = (i//2, i%2)
+            self.prototypes[box_coords] = prototype
+
+        self.draw_boxes(player)
+            
+            
+            
+        
 
 if __name__=='__main__':
     pygame.init()
     display = Display()
 
     mouseover_window = MouseoverWindow()
-
     research_window = ResearchWindow()
+    display_board = DisplayBoard()
     
     gameboard = gameplay.Gameboard()
     test_resource = game_io.resource_pile_factory((6,6), 50)
@@ -232,21 +283,22 @@ if __name__=='__main__':
     test_unit.coords = (5, 5)
     gameboard.add_to_board(test_unit)
 
-    display_board = DisplayBoard()
     display_board.load_gameboard(gameboard)
     display_board.resurface()
 
     display.draw()
 
-    player = gameplay.Player(0, 0, [test_unit], research_amount=20)
-    research_window.draw_player_info(player)
+    test_player = gameplay.Player(0, 0, [test_unit], research_amount=20)
+    research_window.draw_player_info(test_player)
     
     while True:
-
         playzone_mouse = display.playzone_mouse(pygame.mouse.get_pos())
         highlighted_coords = display_board.highlight(playzone_mouse)
         mouseover_window.draw_mouseover_info(gameboard, highlighted_coords)
-
+        research_mouseover = research_window.mouseover_check(playzone_mouse)
+        if (research_mouseover != None):
+            mouseover_window.draw_unit_info(research_mouseover)
+        
         display.play_screen.blit(mouseover_window.surface, (0, 0))
         display.play_screen.blit(research_window.surface,
                                  (0, TOP_LEFT_WINDOW_SHAPE[1]))

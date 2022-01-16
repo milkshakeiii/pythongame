@@ -100,6 +100,9 @@ class ResourcePile(Placeable):
 class Unit(Placeable):
     parts: list
     owner_player_number: int
+    unit_name: str
+    production_cost: int
+    research_threshhold: float
 
 @dataclass
 class Part:
