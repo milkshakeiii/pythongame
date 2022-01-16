@@ -262,7 +262,23 @@ class ResearchWindow:
 
         self.draw_boxes(player)
             
-            
+
+def test_gamestate():
+    gameboard = gameplay.Gameboard()
+    test_resource = game_io.resource_pile_factory((6,6), 50)
+    gameboard.add_to_board(test_resource)
+    test_unit = game_io.unit_prototype_from_file("test_team_1", "mothership_1")
+    test_unit.coords = (5, 5)
+    gameboard.add_to_board(test_unit)
+
+    test_army = [game_io.unit_prototype_from_file("test_team_1", "mothership_1"),
+                 game_io.unit_prototype_from_file("test_team_1", "small_1"),
+                 game_io.unit_prototype_from_file("test_team_1", "small_2"),
+                 game_io.unit_prototype_from_file("test_team_1", "big_1")]
+
+    test_player = gameplay.Player(0, 0, test_army, research_amount=20)
+
+    return gameplay.Gamestate(gameboard, [test_player])
             
         
 
@@ -274,25 +290,20 @@ if __name__=='__main__':
     research_window = ResearchWindow()
     display_board = DisplayBoard()
     
-    gameboard = gameplay.Gameboard()
-    test_resource = game_io.resource_pile_factory((6,6), 50)
-    gameboard.add_to_board(test_resource)
-    test_unit = game_io.unit_prototype_from_file("test_team_1", "mothership_1")
-    test_unit.coords = (5, 5)
-    gameboard.add_to_board(test_unit)
+    gamestate = test_gamestate()
 
-    display_board.load_gameboard(gameboard)
+    display_board.load_gameboard(gamestate.gameboard)
     display_board.resurface()
 
     display.draw()
 
-    test_player = gameplay.Player(0, 0, [test_unit], research_amount=20)
-    research_window.draw_player_info(test_player)
+    research_window.draw_player_info(gamestate.players[0])
     
     while True:
         playzone_mouse = display.playzone_mouse(pygame.mouse.get_pos())
         highlighted_coords = display_board.highlight(playzone_mouse)
-        mouseover_window.draw_mouseover_info(gameboard, highlighted_coords)
+        mouseover_window.draw_mouseover_info(gamestate.gameboard,
+                                             highlighted_coords)
         research_mouseover = research_window.mouseover_check(playzone_mouse)
         if (research_mouseover != None):
             mouseover_window.draw_unit_info(research_mouseover)

@@ -36,7 +36,7 @@ def unit_prototype_from_file(team_name, unit_name):
                 raise Exception("Error parsing production_cost value.")
         elif key == "research_threshhold":
             try:
-                research_threshhold = int(value)
+                research_threshhold = float(value)
             except:
                 raise Exception("Error parsing research_threshhold value.")
         elif key == "part":

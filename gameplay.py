@@ -22,9 +22,9 @@ class Gameboard:
                 self.squares[coords].remove(placeable)
 
 class Gamestate:
-    def __init__(self, gameboard):
+    def __init__(self, gameboard, players):
         self.gameboard = gameboard
-        self.players = []
+        self.players = players
 
 class Player:
     def __init__(self,

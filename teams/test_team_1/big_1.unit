@@ -1,0 +1,18 @@
+size: 6
+image: 6x6DN
+production_cost: 80
+research_threshhold: 0.4
+part: armor
+	part_size: 8
+	part_quality: 0.5
+part: locomotor
+	part_size: 6
+	part_quality: 0.5
+	part_shape: queen
+part: core
+	part_size: 8
+	part_quality: 0.5 
+part: armament
+	part_size: 9
+	part_quality: 0.7
+	part_shape: king
