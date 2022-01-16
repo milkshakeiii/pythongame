@@ -267,6 +267,8 @@ def test_gamestate():
     gameboard = gameplay.Gameboard()
     test_resource = game_io.resource_pile_factory((6,6), 50)
     gameboard.add_to_board(test_resource)
+    test_resource = game_io.resource_pile_factory((6,7), 4)
+    gameboard.add_to_board(test_resource)
     test_unit = game_io.unit_prototype_from_file("test_team_1", "mothership_1")
     test_unit.coords = (5, 5)
     gameboard.add_to_board(test_unit)
