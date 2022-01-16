@@ -6,7 +6,7 @@ ctypes.windll.user32.SetProcessDPIAware()
 
 
 pygame.font.init()
-DEFAULT_FONT = pygame.font.SysFont('Ariel', 32)
+DEFAULT_FONT = pygame.font.SysFont('consolas', 22)
 
 GAME_SHAPE = (1600, 900)
 TOP_LEFT_WINDOW_SHAPE = (310, 600)
@@ -156,7 +156,7 @@ class MouseoverWindow:
                                           False,
                                           (255, 255, 255))
             self.surface.blit(size_text, (10, y))
-            self.surface.blit(quality_text, (40, y))
+            self.surface.blit(quality_text, (35, y))
             self.surface.blit(type_text, (110, y))
             self.surface.blit(hp_text, (240, y))
             y+=30
@@ -186,10 +186,10 @@ class ResearchWindow:
         return (column*self.research_box_width,
                 self.prototype_zone_offset + row*self.research_box_height)
 
-    def build_box(self, row, column, player, highlight = False):
+    def build_box(self, row, column, player):
         research_box = pygame.Surface((self.research_box_width,
                                        self.research_box_height))
-        research_box.fill((90, 120, 90) if highlight else (30, 60, 30))
+        research_box.fill((30, 60, 30))
         research_box.blit(load_whole_image("research_box"), (0, 0))
 
         prototype = self.prototypes.get((row, column), None)
@@ -197,7 +197,7 @@ class ResearchWindow:
             name = prototype.unit_name
             locked = player.research_fraction() < prototype.research_threshhold
             color = (125, 125, 125) if locked else (255, 255, 255)
-            name_text = DEFAULT_FONT.render(name[:4],
+            name_text = DEFAULT_FONT.render(name[:5],
                                             False,
                                             color)
             research_string = "{0:.1%}".format(prototype.research_threshhold)
@@ -210,8 +210,8 @@ class ResearchWindow:
                                             (255, 255, 255))
 
             research_box.blit(name_text, (2, 4))
-            research_box.blit(research_text, (60, 4))
-            research_box.blit(cost_text, (120, 4))
+            research_box.blit(research_text, (62, 4))
+            research_box.blit(cost_text, (125, 4))
         return research_box
 
     def draw_boxes(self, player):
@@ -235,8 +235,6 @@ class ResearchWindow:
                                 research_pos[1] - self.prototype_zone_offset)
         research_box_row = prototype_zone_mouse[1]//self.research_box_height
         research_box_column = prototype_zone_mouse[0]//self.research_box_width
-
-        
         
         if (research_box_row, research_box_column) in self.prototypes:
             return self.prototypes[(research_box_row, research_box_column)]
@@ -255,7 +253,7 @@ class ResearchWindow:
         resource_text = DEFAULT_FONT.render(str(player.resource_amount),
                                             False,
                                             (255, 255, 255))
-        self.surface.blit(resource_text, (240, 260))
+        self.surface.blit(resource_text, (250, 260))
 
         for i in range(len(player.unit_prototypes)):
             prototype = player.unit_prototypes[i]
