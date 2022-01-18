@@ -43,49 +43,30 @@ class Player:
         return 1-(199/200)**self.research_amount
 
 class ShapeType(ABC):
-    @abstractmethod
-    def possible_squares(self, origin_unit):
-        return NotImplemented
-
-    @abstractmethod
-    def move_unit(self, unit, gameboard, direction, distance):
+    @abstract_method
+    def reachable_squares(self, part_size):
         return NotImplemented
 
 class Bishop(ShapeType):
-    def possible_squares(self, origin_unit):
-        pass
-
-    def move_unit(self, unit, gameboard, direction, distance):
-        pass
+    def reachable_squares(self, part_size):
+        return NotImplemented
 
 class Rook(ShapeType):
-    def possible_squares(self, origin_unit):
-        pass
-
-    def move_unit(self, unit, gameboard, direction, distance):
-        pass
+    def reachable_squares(self, part_size):
+        return NotImplemented
 
 class Knight(ShapeType):
-    def possible_squares(self, origin_unit):
-        pass
-
-    def move_unit(self, unit, gameboard, direction, distance):
-        pass
-
+    def reachable_squares(self, part_size):
+        return NotImplemented
+    
 class King(ShapeType):
-    def possible_squares(self, origin_unit):
-        pass
-
-    def move_unit(self, unit, gameboard, direction, distance):
-        pass
-
+    def reachable_squares(self, part_size):
+        return NotImplemented
+    
 class Queen(ShapeType):
-    def possible_squares(self, origin_unit):
-        pass
-
-    def move_unit(self, unit, gameboard, direction, distance):
-        pass
-
+    def reachable_squares(self, part_size):
+        return NotImplemented
+    
 @dataclass
 class Placeable:
     image_name: str
@@ -108,18 +89,15 @@ class Unit(Placeable):
         result = []
         for part in parts:
             if type(part) is Locomotor:
-                result += [reachable_squares_for_part(part)]
+                result += part.shape_type.reachable_squares(self.coords, part.size)
         return result
 
     def attackable_squares(self):
         result = []
         for part in parts:
             if type(part) is Armament:
-                result += [reachable_squares_for_part(part)]
+                result += part.shape_type.reachable_squares(self.coords, part.size)
         return result
-
-    def reachable_squares_for_part(self, part):
-        return []
 
 @dataclass
 class Part:
