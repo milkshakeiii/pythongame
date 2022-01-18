@@ -104,6 +104,23 @@ class Unit(Placeable):
     production_cost: int
     research_threshhold: float
 
+    def moveable_squares(self):
+        result = []
+        for part in parts:
+            if type(part) is Locomotor:
+                result += [reachable_squares_for_part(part)]
+        return result
+
+    def attackable_squares(self):
+        result = []
+        for part in parts:
+            if type(part) is Armament:
+                result += [reachable_squares_for_part(part)]
+        return result
+
+    def reachable_squares_for_part(self, part):
+        return []
+
 @dataclass
 class Part:
     size: int
@@ -203,3 +220,15 @@ class Producer(Part):
     def display_name(self):
         return "Producer"
     
+class Gameturn:
+    def __init__(self):
+        self.players_to_coords_to_actions = dict()
+
+
+
+
+
+
+
+
+        
