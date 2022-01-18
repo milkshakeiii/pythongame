@@ -43,28 +43,28 @@ class Player:
         return 1-(199/200)**self.research_amount
 
 class ShapeType(ABC):
-    @abstract_method
-    def reachable_squares(self, part_size):
+    @abstractmethod
+    def move_paths(self, part_size):
         return NotImplemented
 
 class Bishop(ShapeType):
-    def reachable_squares(self, part_size):
+    def move_paths(self, part_size):
         return NotImplemented
 
 class Rook(ShapeType):
-    def reachable_squares(self, part_size):
+    def move_paths(self, part_size):
         return NotImplemented
 
 class Knight(ShapeType):
-    def reachable_squares(self, part_size):
+    def move_paths(self, part_size):
         return NotImplemented
     
 class King(ShapeType):
-    def reachable_squares(self, part_size):
+    def move_paths(self, part_size):
         return NotImplemented
     
 class Queen(ShapeType):
-    def reachable_squares(self, part_size):
+    def move_paths(self, part_size):
         return NotImplemented
     
 @dataclass
@@ -89,14 +89,14 @@ class Unit(Placeable):
         result = []
         for part in parts:
             if type(part) is Locomotor:
-                result += part.shape_type.reachable_squares(self.coords, part.size)
+                result += part.shape_type.move_paths(self.coords, part.size)
         return result
 
     def attackable_squares(self):
         result = []
         for part in parts:
             if type(part) is Armament:
-                result += part.shape_type.reachable_squares(self.coords, part.size)
+                result += part.shape_type.move_paths(self.coords, part.size)
         return result
 
 @dataclass
