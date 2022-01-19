@@ -60,6 +60,9 @@ class DisplayBoard:
         self.highlight_square = load_image_square("highlight_square")
         self.highlighted_square = None
 
+    def click(self, gameboard, coords):
+        pass # TODO
+
     def surface_for_square(self, x, y, highlighted=False):
         surface = pygame.Surface((GRID_WIDTH, GRID_HEIGHT))
         background_square = self.light_square if (x+y)%2==0 else self.dark_square
@@ -113,6 +116,15 @@ class MouseoverWindow:
     def __init__(self):
         self.surface = pygame.Surface(TOP_LEFT_WINDOW_SHAPE)
         self.resource_image = load_whole_image("big_resource")
+        self.locked = None
+
+    def click(self, gameboard, coords):
+        self.locked = self.draw_mouseover_info(gameboard, coords)
+        if self.locked == None:
+            self.unclick()
+
+    def unclick(self):
+        self.locked = None
 
     def draw_mouseover_info(self, gameboard, coords):
         self.surface.fill((60, 30, 30))
@@ -124,7 +136,9 @@ class MouseoverWindow:
                 resources = placeable.amount
             elif type(placeable) is gameplay.Unit:
                 unit = placeable
-        if (unit != None):
+        if (self.locked != None):
+            self.draw_unit_info(self.locked)
+        elif (unit != None):
             self.draw_unit_info(unit)
         if (resources != 0):
             self.surface.blit(self.resource_image, (210, 160))
@@ -132,6 +146,7 @@ class MouseoverWindow:
                                                 False,
                                                 (255, 255, 255))
             self.surface.blit(resource_text, (250, 170))
+        return unit
 
 
     def draw_unit_info(self, unit):
@@ -272,6 +287,9 @@ def test_gamestate():
     test_unit = game_io.unit_prototype_from_file("test_team_1", "mothership_1")
     test_unit.coords = (5, 5)
     gameboard.add_to_board(test_unit)
+    test_unit_2 = game_io.unit_prototype_from_file("test_team_1", "small_1")
+    test_unit_2.coords = (20, 15)
+    gameboard.add_to_board(test_unit_2)
 
     test_army = [game_io.unit_prototype_from_file("test_team_1", "mothership_1"),
                  game_io.unit_prototype_from_file("test_team_1", "small_1"),
@@ -321,3 +339,10 @@ if __name__=='__main__':
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                mouseover_window.click(gamestate.gameboard,
+                                       highlighted_coords)
+                display_board.click(gamestate.gameboard,
+                                    highlighted_coords)
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button != 1:
+                mouseover_window.unclick()

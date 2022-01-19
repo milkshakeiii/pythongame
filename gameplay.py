@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 class Gameboard:
     def __init__(self):
-        self.squares = dict()
+        self.squares = dict() # coords to list of placeables
 
     def add_to_board(self, placeable):
         size = placeable.size
