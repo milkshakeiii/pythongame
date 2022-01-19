@@ -21,6 +21,9 @@ class Gameboard:
                     raise Exception("Expected placeable not found at " + coords)
                 self.squares[coords].remove(placeable)
 
+def in_bounds(coord):
+    return coord[0] < 43 and coord[1] < 30 and coord[0] >= 0 and coord[1] >= 0
+
 class Gamestate:
     def __init__(self, gameboard, players):
         self.gameboard = gameboard
@@ -52,26 +55,67 @@ class ShapeType(ABC):
     def move_paths(self, start_coord, part_size) -> list:
         return NotImplemented
 
+    '''
+    blast_paths returns the same type of data as
+    move_paths but each path represents a choice
+    of blast direction so the king shape returns
+    a single path instead of many length 1 paths
+    '''
+    def blast_paths(self, start_coord, part_size) -> list:
+        return self.move_paths(start_coord, part_size)
+
+def direct_path_move_path(start_coord, part_size, steps):
+    result = []
+    for step in steps:
+        path = []
+        current_coord = start_coord
+        for i in range(part_size):
+            current_coord = (current_coord[0]+step[0],
+                             current_coord[1]+step[1])
+            if in_bounds(current_coord):
+                path.append(current_coord)
+        result.append(path)
+    return result
+
 class Bishop(ShapeType):
     def move_paths(self, start_coord, part_size):
-        #result = []
-        #for step in [
+        return direct_path_move_path(start_coord,
+                                     part_size,
+                                     [(1, 1), (-1, 1), (1, -1), (-1, -1)])
+                
+                
 
 class Rook(ShapeType):
     def move_paths(self, start_coord, part_size):
-        return NotImplemented
+        return direct_path_move_path(start_coord,
+                                     part_size,
+                                     [(1, 0), (0, 1), (0, -1), (-1, 0)])
 
 class Knight(ShapeType):
     def move_paths(self, start_coord, part_size):
-        return NotImplemented
+        return direct_path_move_path(start_coord,
+                                     part_size,
+                                     [(1, 2), (1, -2), (2, 1), (2, -1),
+                                      (-1, 2), (-1, -2), (-2, 1), (-2, -1)])
     
 class King(ShapeType):
     def move_paths(self, start_coord, part_size):
-        return NotImplemented
+        many_paths = []
+        for i in range(part_size+1):
+            for j in range(part_size+1):
+                if not (i == 0 and j == 0) and in_bounds((i, j)):
+                    many_paths.append([(i, j)])
+        return many_paths
+
+    def blast_paths(self, start_coord, part_size):
+        return [path[0] for path in self.move_paths(start_coord, part_size)]
     
 class Queen(ShapeType):
     def move_paths(self, start_coord, part_size):
-        return NotImplemented
+        return direct_path_move_path(start_coord,
+                                     part_size,
+                                     [(1, 1), (-1, 1), (1, -1), (-1, -1),
+                                      (1, 0), (0, 1), (0, -1), (-1, 0)])
     
 @dataclass
 class Placeable:
