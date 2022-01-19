@@ -43,28 +43,34 @@ class Player:
         return 1-(199/200)**self.research_amount
 
 class ShapeType(ABC):
+    '''
+    move_paths implementations return a list of paths
+    where a path is a list of coords each of which
+    depends on the previous being reachable
+    '''
     @abstractmethod
-    def move_paths(self, part_size):
+    def move_paths(self, start_coord, part_size) -> list:
         return NotImplemented
 
 class Bishop(ShapeType):
-    def move_paths(self, part_size):
-        return NotImplemented
+    def move_paths(self, start_coord, part_size):
+        #result = []
+        #for step in [
 
 class Rook(ShapeType):
-    def move_paths(self, part_size):
+    def move_paths(self, start_coord, part_size):
         return NotImplemented
 
 class Knight(ShapeType):
-    def move_paths(self, part_size):
+    def move_paths(self, start_coord, part_size):
         return NotImplemented
     
 class King(ShapeType):
-    def move_paths(self, part_size):
+    def move_paths(self, start_coord, part_size):
         return NotImplemented
     
 class Queen(ShapeType):
-    def move_paths(self, part_size):
+    def move_paths(self, start_coord, part_size):
         return NotImplemented
     
 @dataclass
