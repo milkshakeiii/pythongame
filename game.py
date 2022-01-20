@@ -60,9 +60,6 @@ class DisplayBoard:
         self.highlight_square = load_image_square("highlight_square")
         self.highlighted_square = None
 
-    def click(self, gameboard, coords):
-        pass # TODO
-
     def surface_for_square(self, x, y, highlighted=False):
         surface = pygame.Surface((GRID_WIDTH, GRID_HEIGHT))
         background_square = self.light_square if (x+y)%2==0 else self.dark_square
@@ -110,6 +107,20 @@ class DisplayBoard:
                           coords[1] - placeable.coords[1])
                 image = load_image_square(placeable.image_name, offset)
                 self.squares[coords]= self.squares.get(coords, []) + [image]
+
+    '''
+    Based on the submitted actions in gameturn, draw highlights of
+    different colors for movemenet, attack, production.
+    '''
+    def draw_working_turn(self, gameturn):
+        pass # TODO
+
+    '''
+    Based on the dicts in highlight_info, draw highlights for UI
+    actions in progress, determined by mouseover_window.
+    '''
+    def draw_highlights(self, highlight_info):
+        pass # TODO
                 
             
 class MouseoverWindow:
@@ -118,13 +129,21 @@ class MouseoverWindow:
         self.resource_image = load_whole_image("big_resource")
         self.locked = None
 
-    def click(self, gameboard, coords):
+    def click(self, gameboard, coords, gameturn):
         self.locked = self.draw_mouseover_info(gameboard, coords)
         if self.locked == None:
             self.unclick()
 
     def unclick(self):
         self.locked = None
+
+    '''
+    Based on selected units and parts, build a HighlightInfo to
+    tell DisplayGameboard about which squares should be highlighted
+    for UI actions in progress.
+    '''
+    def get_highlights(self):
+        pass # TODO
 
     def draw_mouseover_info(self, gameboard, coords):
         self.surface.fill((60, 30, 30))
@@ -149,7 +168,9 @@ class MouseoverWindow:
         return unit
 
 
-    def draw_unit_info(self, unit):
+    def draw_unit_info(self, unit, clear_first = False):
+        if (clear_first == True):
+            self.surface.fill((60, 30, 30))
         image = load_whole_image(unit.image_name)
         self.surface.blit(image, (20, 20))
         parts = unit.parts
@@ -276,7 +297,14 @@ class ResearchWindow:
             self.prototypes[box_coords] = prototype
 
         self.draw_boxes(player)
-            
+
+
+class HighlightInfo:
+    def __init__(self):
+        self.attack_highlights = dict()
+        self.move_highlights = dict()
+        self.produce_highlights = dict()
+        
 
 def test_gamestate():
     gameboard = gameplay.Gameboard()
@@ -318,6 +346,7 @@ if __name__=='__main__':
     display.draw()
 
     research_window.draw_player_info(gamestate.players[0])
+    working_turn = gameplay.Gameturn()
     
     while True:
         playzone_mouse = display.playzone_mouse(pygame.mouse.get_pos())
@@ -326,7 +355,12 @@ if __name__=='__main__':
                                              highlighted_coords)
         research_mouseover = research_window.mouseover_check(playzone_mouse)
         if (research_mouseover != None):
-            mouseover_window.draw_unit_info(research_mouseover)
+            mouseover_window.draw_unit_info(research_mouseover,
+                                            clear_first=True)
+
+        additional_highlights: HighlightInfo = mouseover_window.get_highlights()
+        display_board.draw_working_turn(working_turn)
+        display_board.draw_highlights(additional_highlights)
         
         display.play_screen.blit(mouseover_window.surface, (0, 0))
         display.play_screen.blit(research_window.surface,
@@ -341,8 +375,7 @@ if __name__=='__main__':
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 mouseover_window.click(gamestate.gameboard,
-                                       highlighted_coords)
-                display_board.click(gamestate.gameboard,
-                                    highlighted_coords)
+                                       highlighted_coords,
+                                       working_turn)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button != 1:
                 mouseover_window.unclick()
