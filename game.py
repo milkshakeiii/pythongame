@@ -121,7 +121,14 @@ class DisplayBoard:
     '''
     def draw_highlights(self, highlight_info):
         pass # TODO
-                
+
+
+class HighlightInfo:
+    def __init__(self):
+        self.attack_highlights = set()
+        self.move_highlights = set()
+        self.produce_highlights = set()
+         
             
 class MouseoverWindow:
     def __init__(self):
@@ -159,8 +166,14 @@ class MouseoverWindow:
     tell DisplayGameboard about which squares should be highlighted
     for UI actions in progress.
     '''
-    def get_highlights(self):
-        pass # TODO
+    def get_highlights(self) -> HighlightInfo:
+        highlightInfo = HighlightInfo()
+        if type(self.ui_active_part) is gameplay.Armament:
+            shape = self.ui_active_part.shape_type
+            for path in shape.blast_paths(self.locked.coords,
+                                          self.ui_active_part.size):
+                for coord in path:
+                    highlightInfo.attack_highlights.add(coord)
 
     def draw_mouseover_info(self, gameboard, coords, local_player, gameturn):
         self.surface.fill((60, 30, 30))
@@ -320,13 +333,6 @@ class ResearchWindow:
             self.prototypes[box_coords] = prototype
 
         self.draw_boxes(player)
-
-
-class HighlightInfo:
-    def __init__(self):
-        self.attack_highlights = dict()
-        self.move_highlights = dict()
-        self.produce_highlights = dict()
         
 
 def test_gamestate():
@@ -341,6 +347,10 @@ def test_gamestate():
     test_unit_2 = game_io.unit_prototype_from_file("test_team_1", "small_1")
     test_unit_2.coords = (20, 15)
     gameboard.add_to_board(test_unit_2)
+    test_unit_3 = game_io.unit_prototype_from_file("test_team_1", "big_1")
+    test_unit_3.coords = (5, 20)
+    gameboard.add_to_board(test_unit_3)
+
 
     test_army = [game_io.unit_prototype_from_file("test_team_1", "mothership_1"),
                  game_io.unit_prototype_from_file("test_team_1", "small_1"),
