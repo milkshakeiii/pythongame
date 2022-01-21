@@ -117,17 +117,17 @@ class Queen(ShapeType):
                                      [(1, 1), (-1, 1), (1, -1), (-1, -1),
                                       (1, 0), (0, 1), (0, -1), (-1, 0)])
     
-@dataclass
+@dataclass(eq=False)
 class Placeable:
     image_name: str
     coords: tuple
     size: int
 
-@dataclass
+@dataclass(eq=False)
 class ResourcePile(Placeable):
     amount: float
 
-@dataclass
+@dataclass(eq=False)
 class Unit(Placeable):
     parts: list
     owner_player_number: int
@@ -149,7 +149,7 @@ class Unit(Placeable):
                 result += part.shape_type.move_paths(self.coords, part.size)
         return result
 
-@dataclass
+@dataclass(eq=False)
 class Part:
     size: int
     quality: float
@@ -161,7 +161,7 @@ class Part:
     def display_name(self):
         raise Exception("display_name called on part superclass")
 
-@dataclass
+@dataclass(eq=False)
 class Locomotor(Part):
     shape_type: ShapeType
 
@@ -174,7 +174,7 @@ class Locomotor(Part):
     def display_name(self):
         return "Locomotor"
 
-@dataclass
+@dataclass(eq=False)
 class Collector(Part):
     def max_resources_removed_per_turn(self):
         return self.size
@@ -188,7 +188,7 @@ class Collector(Part):
     def display_name(self):
         return "Collector"
         
-@dataclass
+@dataclass(eq=False)
 class Armament(Part):
     shape_type: ShapeType
 
@@ -204,7 +204,7 @@ class Armament(Part):
     def display_name(self):
         return "Armament"
 
-@dataclass
+@dataclass(eq=False)
 class Researcher(Part):
     def research_amount(self):
         return self.size
@@ -215,7 +215,7 @@ class Researcher(Part):
     def display_name(self):
         return "Researcher"
 
-@dataclass
+@dataclass(eq=False)
 class EnergyCore(Part):
     current_energy: float
 
@@ -228,12 +228,12 @@ class EnergyCore(Part):
     def display_name(self):
         return "Core"
 
-@dataclass
+@dataclass(eq=False)
 class Armor(Part):
     def display_name(self):
         return "Armor"
 
-@dataclass
+@dataclass(eq=False)
 class Producer(Part):
     under_production: str
     points_to_produce: float
@@ -249,8 +249,17 @@ class Producer(Part):
         return "Producer"
     
 class Gameturn:
-    def __init__(self):
+    def __init__(self, players):
+        #actions stored as a list of Part objects
         self.players_to_coords_to_actions = dict()
+        for player in players:
+            self[player] = dict()
+
+    def __getitem__(self, key):
+        return self.players_to_coords_to_actions[key]
+
+    def __setitem__(self, key, value):
+        self.players_to_coords_to_actions[key] = value
 
 
 

@@ -132,7 +132,12 @@ class MouseoverWindow:
         self.locked = None
         self.ui_active_part = None
 
-    def click(self, gameboard, coords, gameturn, mouse_pos):
+    def click(self,
+              gameboard,
+              coords,
+              gameturn,
+              mouse_pos,
+              local_player):
         part_zone_y = (mouse_pos[1] - self.part_zone_offset)
         clicked_part_index = part_zone_y // self.part_zone_increment
         if ((self.locked != None) and
@@ -141,7 +146,7 @@ class MouseoverWindow:
             self.ui_active_part = self.locked.parts[clicked_part_index]
             return
 
-        self.locked = self.draw_mouseover_info(gameboard, coords)
+        self.locked = self.draw_mouseover_info(gameboard, coords, local_player, gameturn)
         if self.locked == None:
             self.unclick()
 
@@ -157,7 +162,7 @@ class MouseoverWindow:
     def get_highlights(self):
         pass # TODO
 
-    def draw_mouseover_info(self, gameboard, coords):
+    def draw_mouseover_info(self, gameboard, coords, local_player, gameturn):
         self.surface.fill((60, 30, 30))
         placeables = gameboard.squares.get(coords, [])
         resources = 0
@@ -168,9 +173,9 @@ class MouseoverWindow:
             elif type(placeable) is gameplay.Unit:
                 unit = placeable
         if (self.locked != None):
-            self.draw_unit_info(self.locked)
+            self.draw_unit_info(self.locked, local_player, gameturn)
         elif (unit != None):
-            self.draw_unit_info(unit)
+            self.draw_unit_info(unit, local_player, gameturn)
         if (resources != 0):
             self.surface.blit(self.resource_image, (210, 160))
             resource_text = DEFAULT_FONT.render("x " + str(resources),
@@ -180,17 +185,20 @@ class MouseoverWindow:
         return unit
 
 
-    def draw_unit_info(self, unit, clear_first = False):
+    def draw_unit_info(self, unit, local_player, gameturn, clear_first = False):
         if (clear_first == True):
             self.surface.fill((60, 30, 30))
         image = load_whole_image(unit.image_name)
         self.surface.blit(image, (20, 20))
         parts = unit.parts
+        activated_parts = gameturn[local_player].get(unit.coords, [])
         y=self.part_zone_offset
         for part in parts:
             color = (255, 255, 255)
             if part == self.ui_active_part:
                 color = (255, 255, 0)
+            elif part in activated_parts:
+                color = (0, 255, 0)
             size_text = DEFAULT_FONT.render(str(part.size),
                                             False,
                                             color)
@@ -342,7 +350,6 @@ def test_gamestate():
     test_player = gameplay.Player(0, 0, test_army, research_amount=20)
 
     return gameplay.Gamestate(gameboard, [test_player])
-            
         
 
 if __name__=='__main__':
@@ -360,17 +367,22 @@ if __name__=='__main__':
 
     display.draw()
 
-    research_window.draw_player_info(gamestate.players[0])
-    working_turn = gameplay.Gameturn()
+    local_player = gamestate.players[0]
+    research_window.draw_player_info(local_player)
+    working_turn = gameplay.Gameturn(gamestate.players)
     
     while True:
         playzone_mouse = display.playzone_mouse(pygame.mouse.get_pos())
         highlighted_coords = display_board.highlight(playzone_mouse)
         mouseover_window.draw_mouseover_info(gamestate.gameboard,
-                                             highlighted_coords)
+                                             highlighted_coords,
+                                             local_player,
+                                             working_turn)
         research_mouseover = research_window.mouseover_check(playzone_mouse)
         if (research_mouseover != None):
             mouseover_window.draw_unit_info(research_mouseover,
+                                            local_player,
+                                            working_turn,
                                             clear_first=True)
 
         additional_highlights: HighlightInfo = mouseover_window.get_highlights()
@@ -392,6 +404,7 @@ if __name__=='__main__':
                 mouseover_window.click(gamestate.gameboard,
                                        highlighted_coords,
                                        working_turn,
-                                       playzone_mouse)
+                                       playzone_mouse,
+                                       local_player)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button != 1:
                 mouseover_window.unclick()
