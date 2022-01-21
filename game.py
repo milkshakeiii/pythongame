@@ -127,15 +127,27 @@ class MouseoverWindow:
     def __init__(self):
         self.surface = pygame.Surface(TOP_LEFT_WINDOW_SHAPE)
         self.resource_image = load_whole_image("big_resource")
+        self.part_zone_offset = 200
+        self.part_zone_increment = 30
         self.locked = None
+        self.ui_active_part = None
 
-    def click(self, gameboard, coords, gameturn):
+    def click(self, gameboard, coords, gameturn, mouse_pos):
+        part_zone_y = (mouse_pos[1] - self.part_zone_offset)
+        clicked_part_index = part_zone_y // self.part_zone_increment
+        if ((self.locked != None) and
+            (clicked_part_index < len(self.locked.parts)) and
+            (mouse_pos[0] < TOP_LEFT_WINDOW_SHAPE[0])):
+            self.ui_active_part = self.locked.parts[clicked_part_index]
+            return
+
         self.locked = self.draw_mouseover_info(gameboard, coords)
         if self.locked == None:
             self.unclick()
 
     def unclick(self):
         self.locked = None
+        self.ui_active_part = None
 
     '''
     Based on selected units and parts, build a HighlightInfo to
@@ -174,28 +186,31 @@ class MouseoverWindow:
         image = load_whole_image(unit.image_name)
         self.surface.blit(image, (20, 20))
         parts = unit.parts
-        y=200
+        y=self.part_zone_offset
         for part in parts:
+            color = (255, 255, 255)
+            if part == self.ui_active_part:
+                color = (255, 255, 0)
             size_text = DEFAULT_FONT.render(str(part.size),
                                             False,
-                                            (255, 255, 255))
+                                            color)
             quality_string = "%6.2f" % (part.quality)
             quality_text = DEFAULT_FONT.render(quality_string,
                                                False,
-                                               (255, 255, 255))
+                                               color)
             type_text = DEFAULT_FONT.render(part.display_name(),
                                             False,
-                                            (255, 255, 255))
+                                            color)
             current_hp_string = str(part.max_hp()-part.damage)
             hp_string = current_hp_string + "/" + str(part.max_hp())
             hp_text = DEFAULT_FONT.render(hp_string,
                                           False,
-                                          (255, 255, 255))
+                                          color)
             self.surface.blit(size_text, (10, y))
             self.surface.blit(quality_text, (35, y))
             self.surface.blit(type_text, (110, y))
             self.surface.blit(hp_text, (240, y))
-            y+=30
+            y+=self.part_zone_increment
 
 
 class ResearchWindow:
@@ -376,6 +391,7 @@ if __name__=='__main__':
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 mouseover_window.click(gamestate.gameboard,
                                        highlighted_coords,
-                                       working_turn)
+                                       working_turn,
+                                       playzone_mouse)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button != 1:
                 mouseover_window.unclick()
