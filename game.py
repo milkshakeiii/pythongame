@@ -1,3 +1,5 @@
+from enum import Enum
+
 import pygame
 import sys, os, ctypes
 import game_io
@@ -51,20 +53,31 @@ class Display:
                 screenzone_mouse[1] - self.playtop_y)
 
 
+class HighlightColor(Enum):
+    RED = 1
+    GREEN = 2
+    BLUE = 3
+    WHITE = 4
+
+
 class DisplayBoard:
     def __init__(self):
         self.surface = pygame.Surface(RIGHT_WINDOW_SHAPE)
         self.squares = dict() # coords to list of images
         self.light_square = load_image_square("light_square")
         self.dark_square = load_image_square("dark_square")
-        self.highlight_square = load_image_square("highlight_square")
+        self.highlight_squares = {
+            HighlightColor.RED: load_image_square("highlight_square_red"),
+            HighlightColor.GREEN: load_image_square("highlight_square_green"),
+            HighlightColor.BLUE: load_image_square("highlight_square_blue"),
+            HighlightColor.WHITE: load_image_square("highlight_square_white")}
         self.highlighted_square = None
 
-    def surface_for_square(self, x, y, highlighted=False):
+    def surface_for_square(self, x, y, highlight=None):
         surface = pygame.Surface((GRID_WIDTH, GRID_HEIGHT))
         background_square = self.light_square if (x+y)%2==0 else self.dark_square
-        if (highlighted):
-            background_square = self.highlight_square
+        if (highlight):
+            background_square = self.highlight_squares[highlight]
         surface.blit(background_square, (0, 0))
         if (x, y) in self.squares:
             images = self.squares[(x, y)]
@@ -77,12 +90,12 @@ class DisplayBoard:
             for y in range(30):
                 self.draw_square(x, y)
 
-    def draw_square(self, x, y, highlighted=False):
-        self.surface.blit(self.surface_for_square(x, y, highlighted=highlighted),
+    def draw_square(self, x, y, highlight=None):
+        self.surface.blit(self.surface_for_square(x, y, highlight=highlight),
                           (x*GRID_WIDTH, y*GRID_HEIGHT))
 
     '''
-    returns highlighted game grid coords
+    draws mouseover highlight and returns highlighted game grid coords
     '''
     def highlight(self, mouse_position) -> tuple:
         mouse_board_position = (mouse_position[0] - TOP_LEFT_WINDOW_SHAPE[0],
@@ -95,7 +108,7 @@ class DisplayBoard:
                                        mouse_board_position[1]//GRID_HEIGHT)
             self.draw_square(self.highlighted_square[0],
                              self.highlighted_square[1],
-                             highlighted=True)
+                             highlight=HighlightColor.WHITE)
         else:
             self.highlighted_square = None
         return self.highlighted_square
@@ -120,15 +133,23 @@ class DisplayBoard:
     actions in progress, determined by mouseover_window.
     '''
     def draw_highlights(self, highlight_info):
-        pass # TODO
-
+        attack = highlight_info.attack_highlights
+        move = highlight_info.move_highlights
+        produce = highlight_info.produce_highlights
+        for color,squares in [(HighlightColor.RED, attack),
+                              (HighlightColor.GREEN, move),
+                              (HighlightColor.BLUE, produce)]:
+            for square in squares:
+                self.draw_square(square[0], square[1], highlight=color)
+                
 
 class HighlightInfo:
     def __init__(self):
         self.attack_highlights = set()
         self.move_highlights = set()
         self.produce_highlights = set()
-         
+        self.dehighlights = set()
+
             
 class MouseoverWindow:
     def __init__(self):
@@ -171,9 +192,11 @@ class MouseoverWindow:
         if type(self.ui_active_part) is gameplay.Armament:
             shape = self.ui_active_part.shape_type
             for path in shape.blast_paths(self.locked.coords,
-                                          self.ui_active_part.size):
+                                          self.ui_active_part.size,
+                                          self.locked.size):
                 for coord in path:
-                    highlightInfo.attack_highlights.add(coord)
+                    highlightInfo.attack_highlights.add((coord[0], coord[1]))
+        return highlightInfo
 
     def draw_mouseover_info(self, gameboard, coords, local_player, gameturn):
         self.surface.fill((60, 30, 30))

@@ -21,6 +21,9 @@ class Gameboard:
                     raise Exception("Expected placeable not found at " + coords)
                 self.squares[coords].remove(placeable)
 
+def unit_placement_in_bounds(coord, unit_size):
+    return in_bounds(coord) and in_bounds((coord[0]+unit_size-1, coord[1]+unit_size-1))
+
 def in_bounds(coord):
     return coord[0] < 43 and coord[1] < 30 and coord[0] >= 0 and coord[1] >= 0
 
@@ -52,7 +55,7 @@ class ShapeType(ABC):
     depends on the previous being reachable
     '''
     @abstractmethod
-    def move_paths(self, start_coord, part_size) -> list:
+    def move_paths(self, start_coord, part_size, unit_size) -> list:
         return NotImplemented
 
     '''
@@ -61,10 +64,10 @@ class ShapeType(ABC):
     of blast direction so the king shape returns
     a single path instead of many length 1 paths
     '''
-    def blast_paths(self, start_coord, part_size) -> list:
-        return self.move_paths(start_coord, part_size)
+    def blast_paths(self, start_coord, part_size, unit_size) -> list:
+        return self.move_paths(start_coord, part_size, unit_size)
 
-def direct_path_move_path(start_coord, part_size, steps):
+def direct_path_move_path(start_coord, part_size, steps, unit_size):
     result = []
     for step in steps:
         path = []
@@ -78,44 +81,55 @@ def direct_path_move_path(start_coord, part_size, steps):
     return result
 
 class Bishop(ShapeType):
-    def move_paths(self, start_coord, part_size):
+    def move_paths(self, start_coord, part_size, unit_size):
         return direct_path_move_path(start_coord,
                                      part_size,
-                                     [(1, 1), (-1, 1), (1, -1), (-1, -1)])
+                                     [(1, 1), (-1, 1), (1, -1), (-1, -1)],
+                                     unit_size)
                 
                 
 
 class Rook(ShapeType):
-    def move_paths(self, start_coord, part_size):
+    def move_paths(self, start_coord, part_size, unit_size):
         return direct_path_move_path(start_coord,
                                      part_size,
-                                     [(1, 0), (0, 1), (0, -1), (-1, 0)])
+                                     [(1, 0), (0, 1), (0, -1), (-1, 0)],
+                                     unit_size)
 
 class Knight(ShapeType):
-    def move_paths(self, start_coord, part_size):
+    def move_paths(self, start_coord, part_size, unit_size):
         return direct_path_move_path(start_coord,
                                      part_size,
                                      [(1, 2), (1, -2), (2, 1), (2, -1),
-                                      (-1, 2), (-1, -2), (-2, 1), (-2, -1)])
+                                      (-1, 2), (-1, -2), (-2, 1), (-2, -1)],
+                                     unit_size)
     
 class King(ShapeType):
-    def move_paths(self, start_coord, part_size):
+    def move_paths(self, start_coord, part_size, unit_size):
         many_paths = []
-        for i in range(part_size+1):
-            for j in range(part_size+1):
+        for i in range(-part_size, part_size):
+            for j in range(-part_size, part_size):
                 if not (i == 0 and j == 0) and in_bounds((i, j)):
                     many_paths.append([(i, j)])
         return many_paths
 
-    def blast_paths(self, start_coord, part_size):
-        return [path[0] for path in self.move_paths(start_coord, part_size)]
+    def blast_paths(self, start_coord, part_size, unit_size):
+        blast = []
+        for i in range(-part_size, part_size+unit_size):
+            for j in range(-part_size, part_size+unit_size):
+                candidate = (start_coord[0] + i, start_coord[1] + j)
+                if ((not (0 < i < unit_size and 0 < j < unit_size))
+                    and in_bounds(candidate)):
+                    blast.append(candidate)
+        return [blast]
     
 class Queen(ShapeType):
-    def move_paths(self, start_coord, part_size):
+    def move_paths(self, start_coord, part_size, unit_size):
         return direct_path_move_path(start_coord,
                                      part_size,
                                      [(1, 1), (-1, 1), (1, -1), (-1, -1),
-                                      (1, 0), (0, 1), (0, -1), (-1, 0)])
+                                      (1, 0), (0, 1), (0, -1), (-1, 0)],
+                                     unit_size)
     
 @dataclass(eq=False)
 class Placeable:
