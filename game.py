@@ -200,14 +200,18 @@ class MouseoverWindow:
                                           self.ui_active_part.size,
                                           self.locked.size):
                 for coord in path:
-                    highlightInfo.attack_highlights.add((coord[0], coord[1]))
+                    highlightInfo.attack_highlights.add(coord)
         if type(self.ui_active_part) is gameplay.Locomotor:
             shape = self.ui_active_part.shape_type
             for path in shape.move_paths(self.locked.coords,
                                           self.ui_active_part.size,
                                           self.locked.size):
                 for coord in path:
-                    highlightInfo.move_highlights.add((coord[0], coord[1]))
+                    highlightInfo.move_highlights.add(coord)
+        if type(self.ui_active_part) is gameplay.Producer:
+            for coord in self.ui_active_part.spawn_coords(self.locked.coords,
+                                                          self.locked.size):
+                highlightInfo.move_highlights.add(coord)
         return highlightInfo
 
     def draw_mouseover_info(self, gameboard, coords, local_player, gameturn):

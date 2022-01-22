@@ -251,7 +251,8 @@ class Armor(Part):
 
 @dataclass(eq=False)
 class Producer(Part):
-    under_production: str
+    under_production: tuple #(team str, unit str)
+    size_under_production: int
     points_to_produce: float
     current_production_points: float
 
@@ -260,6 +261,28 @@ class Producer(Part):
 
     def points_per_activation(self):
         return self.size
+
+    def next_activation_produces(self):
+        current_amount = self.current_production_points
+        next_amount = current_amount + self.points_per_activation()
+        return next_amount >= self.points_to_produce
+
+    def spawn_coords(self, spawner_coords, spawner_size):
+        spawn_spots = set()
+        for y in [spawner_coords[1]-self.size_under_production,
+                  spawner_coords[1]+spawner_size]:
+            for x in range(spawner_coords[0]-self.size_under_production,
+                           spawner_coords[0]+spawner_size+1):
+                if unit_placement_in_bounds((x, y), self.size_under_production):
+                    spawn_spots.add((x, y))
+        for x in [spawner_coords[0]-self.size_under_production,
+                  spawner_coords[0]+spawner_size]:
+            for y in range(spawner_coords[1]-self.size_under_production,
+                           spawner_coords[1]+spawner_size+1):
+                if unit_placement_in_bounds((x, y), self.size_under_production):
+                    spawn_spots.add((x, y))
+        return spawn_spots
+            
 
     def display_name(self):
         return "Producer"
