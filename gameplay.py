@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum
 from abc import ABC, abstractmethod
 
 class Gameboard:
@@ -191,6 +192,11 @@ class Locomotor(Part):
         return "Locomotor"
 
 @dataclass(eq=False)
+class LocomotorAction:
+    path_index: int
+    move_distance: int
+
+@dataclass(eq=False)
 class Collector(Part):
     def max_resources_removed_per_turn(self):
         return self.size
@@ -219,6 +225,10 @@ class Armament(Part):
 
     def display_name(self):
         return "Armament"
+
+@dataclass(eq=False)
+class ArmamentAction:
+    blast_index: int
 
 @dataclass(eq=False)
 class Researcher(Part):
@@ -282,23 +292,25 @@ class Producer(Part):
                 if unit_placement_in_bounds((x, y), self.size_under_production):
                     spawn_spots.add((x, y))
         return spawn_spots
-            
 
     def display_name(self):
         return "Producer"
+
+@dataclass(eq=False)
+class ProducerAction:
+    produced_unit: tuple #(team str, unit str)
     
 class Gameturn:
     def __init__(self, players):
-        #actions stored as a list of Part objects
-        self.players_to_coords_to_actions = dict()
+        self.players_to_units_to_parts_to_actions = dict()
         for player in players:
             self[player] = dict()
 
     def __getitem__(self, key):
-        return self.players_to_coords_to_actions[key]
+        return self.players_to_units_to_parts_to_actions[key]
 
     def __setitem__(self, key, value):
-        self.players_to_coords_to_actions[key] = value
+        self.players_to_units_to_parts_to_actions[key] = value
 
 
 
