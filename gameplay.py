@@ -22,7 +22,8 @@ class Gameboard:
                 self.squares[coords].remove(placeable)
 
 def unit_placement_in_bounds(coord, unit_size):
-    return in_bounds(coord) and in_bounds((coord[0]+unit_size-1, coord[1]+unit_size-1))
+    return (in_bounds(coord)
+            and in_bounds((coord[0]+unit_size-1, coord[1]+unit_size-1)))
 
 def in_bounds(coord):
     return coord[0] < 43 and coord[1] < 30 and coord[0] >= 0 and coord[1] >= 0
@@ -75,7 +76,7 @@ def direct_path_move_path(start_coord, part_size, steps, unit_size):
         for i in range(part_size):
             current_coord = (current_coord[0]+step[0],
                              current_coord[1]+step[1])
-            if in_bounds(current_coord):
+            if unit_placement_in_bounds(current_coord, unit_size):
                 path.append(current_coord)
         result.append(path)
     return result
@@ -109,7 +110,8 @@ class King(ShapeType):
         many_paths = []
         for i in range(-part_size, part_size):
             for j in range(-part_size, part_size):
-                if not (i == 0 and j == 0) and in_bounds((i, j)):
+                if (i != 0 or j != 0
+                    and unit_placement_in_bounds((i, j), unit_size)):
                     many_paths.append([(i, j)])
         return many_paths
 

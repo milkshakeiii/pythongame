@@ -174,13 +174,18 @@ class MouseoverWindow:
             self.ui_active_part = self.locked.parts[clicked_part_index]
             return
 
-        self.locked = self.draw_mouseover_info(gameboard, coords, local_player, gameturn)
-        if self.locked == None:
-            self.unclick()
+        new_lock = self.draw_mouseover_info(gameboard,
+                                            coords,
+                                            local_player,
+                                            gameturn)
+        self.set_locked_unit(new_lock)
 
     def unclick(self):
-        self.locked = None
+        self.set_locked_unit(None)
+
+    def set_locked_unit(self, locked):
         self.ui_active_part = None
+        self.locked = locked
 
     '''
     Based on selected units and parts, build a HighlightInfo to
@@ -196,6 +201,13 @@ class MouseoverWindow:
                                           self.locked.size):
                 for coord in path:
                     highlightInfo.attack_highlights.add((coord[0], coord[1]))
+        if type(self.ui_active_part) is gameplay.Locomotor:
+            shape = self.ui_active_part.shape_type
+            for path in shape.move_paths(self.locked.coords,
+                                          self.ui_active_part.size,
+                                          self.locked.size):
+                for coord in path:
+                    highlightInfo.move_highlights.add((coord[0], coord[1]))
         return highlightInfo
 
     def draw_mouseover_info(self, gameboard, coords, local_player, gameturn):
