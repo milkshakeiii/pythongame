@@ -211,7 +211,7 @@ class MouseoverWindow:
         if type(self.ui_active_part) is gameplay.Producer:
             for coord in self.ui_active_part.spawn_coords(self.locked.coords,
                                                           self.locked.size):
-                highlightInfo.move_highlights.add(coord)
+                highlightInfo.produce_highlights.add(coord)
         return highlightInfo
 
     def draw_mouseover_info(self, gameboard, coords, local_player, gameturn):
@@ -421,6 +421,8 @@ if __name__=='__main__':
     working_turn = gameplay.Gameturn(gamestate.players)
     
     while True:
+        display_board.resurface()
+        
         playzone_mouse = display.playzone_mouse(pygame.mouse.get_pos())
         highlighted_coords = display_board.highlight(playzone_mouse)
         mouseover_window.draw_mouseover_info(gamestate.gameboard,
