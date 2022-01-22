@@ -121,7 +121,7 @@ class King(ShapeType):
         for i in range(-part_size, part_size+unit_size):
             for j in range(-part_size, part_size+unit_size):
                 candidate = (start_coord[0] + i, start_coord[1] + j)
-                if ((not (0 < i < unit_size and 0 < j < unit_size))
+                if ((not (0 <= i < unit_size and 0 <= j < unit_size))
                     and in_bounds(candidate)):
                     blast.append(candidate)
         return [blast]
