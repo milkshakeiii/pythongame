@@ -76,13 +76,13 @@ class DisplayBoard:
     def surface_for_square(self, x, y, highlight=None):
         surface = pygame.Surface((GRID_WIDTH, GRID_HEIGHT))
         background_square = self.light_square if (x+y)%2==0 else self.dark_square
-        if (highlight):
-            background_square = self.highlight_squares[highlight]
         surface.blit(background_square, (0, 0))
         if (x, y) in self.squares:
             images = self.squares[(x, y)]
             for image in images:
                 surface.blit(image, (0, 0))
+        if (highlight):
+            surface.blit(self.highlight_squares[highlight], (0, 0))
         return surface
 
     def resurface(self):
