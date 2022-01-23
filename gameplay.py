@@ -193,8 +193,7 @@ class Locomotor(Part):
 
 @dataclass(eq=False)
 class LocomotorAction:
-    path_index: int
-    move_distance: int
+    move_target: tuple
 
 @dataclass(eq=False)
 class Collector(Part):
@@ -299,12 +298,23 @@ class Producer(Part):
 @dataclass(eq=False)
 class ProducerAction:
     produced_unit: tuple #(team str, unit str)
+    output_coords: tuple
     
 class Gameturn:
     def __init__(self, players):
         self.players_to_units_to_parts_to_actions = dict()
         for player in players:
             self[player] = dict()
+
+    def add_action(self, player, unit, part, action):
+        self[player][unit] = self[player].get(unit, dict())
+        self[player][unit][part] = action
+
+    def remove_action(self, player, unit, part):
+        del self[player][unit][part]
+
+    def part_active(self, player, unit, part):
+        return (unit in self[player]) and (part in self[player][unit])
 
     def __getitem__(self, key):
         return self.players_to_units_to_parts_to_actions[key]

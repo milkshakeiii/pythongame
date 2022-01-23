@@ -150,6 +150,14 @@ class HighlightInfo:
         self.produce_highlights = set()
         self.dehighlights = set()
 
+    def add_based_on_part(self, add_us, part):
+        if type(part) is gameplay.Armament:
+            highlightInfo.attack_highlights.update(add_us)
+        if type(part) is gameplay.Locomotor:
+            highlightInfo.move_highlights.update(add_us)
+        if type(part) is gameplay.Producer:
+            highlightInfo.produce_highlights.update(add_us)
+
             
 class MouseoverWindow:
     def __init__(self):
@@ -162,23 +170,83 @@ class MouseoverWindow:
 
     def click(self,
               gameboard,
-              coords,
+              clicked_coords,
               gameturn,
               mouse_pos,
               local_player):
+
+        ### CLICKING A PART
         part_zone_y = (mouse_pos[1] - self.part_zone_offset)
         clicked_part_index = part_zone_y // self.part_zone_increment
         if ((self.locked != None) and
+            (clicked_part_index >= 0) and
             (clicked_part_index < len(self.locked.parts)) and
             (mouse_pos[0] < TOP_LEFT_WINDOW_SHAPE[0])):
-            self.ui_active_part = self.locked.parts[clicked_part_index]
+            clicked_part = self.locked.parts[clicked_part_index]
+            if gameturn.part_active(local_player,
+                                    self.locked,
+                                    clicked_part):
+                gameturn.remove_action(local_player, self.locked, clicked_part)
+            else:
+                self.ui_active_part = clicked_part
             return
+        ###
 
+        ### CLICKING AN ACTION 
+        if type(self.ui_active_part) is gameplay.Armament:
+            shape = self.ui_active_part.shape_type
+            index = 0
+            for path in shape.blast_paths(self.locked.coords,
+                                          self.ui_active_part.size,
+                                          self.locked.size):
+                if clicked_coords in path:
+                    action = gameplay.ArmamentAction(blast_index=index)
+                    gameturn.add_action(local_player,
+                                        self.locked,
+                                        self.ui_active_part,
+                                        action)
+                    self.ui_active_part = None
+                    return
+                    
+                index += 1
+        if type(self.ui_active_part) is gameplay.Locomotor:
+            shape = self.ui_active_part.shape_type
+            for path in shape.move_paths(self.locked.coords,
+                                          self.ui_active_part.size,
+                                          self.locked.size):
+                for coord in path:
+                    if clicked_coords == coord:
+                        action = gameplay.LocomotorAction(move_target=coord)
+                        gameturn.add_action(local_player,
+                                        self.locked,
+                                        self.ui_active_part,
+                                        action)
+                        self.ui_active_part = None
+                        return
+                    
+        if (type(self.ui_active_part) is gameplay.Producer and
+            self.ui_active_part.next_activation_produces()):
+            for coord in self.ui_active_part.spawn_coords(self.locked.coords,
+                                                          self.locked.size):
+                if clicked_coords == coord:
+                    build_unit = self.ui_active_part.under_production
+                    action = gameplay.ProducerAction(produced_unit=build_unit,
+                                                     output_coords=coords)
+                    gameturn.add_action(local_player,
+                                        self.locked,
+                                        self.ui_active_part,
+                                        action)
+                    self.ui_active_part = None
+                    return
+        ###
+
+        ### LOCKING OR UNLOCKING
         new_lock = self.draw_mouseover_info(gameboard,
-                                            coords,
+                                            clicked_coords,
                                             local_player,
                                             gameturn)
         self.set_locked_unit(new_lock)
+        ###
 
     def unclick(self):
         self.set_locked_unit(None)
@@ -214,6 +282,10 @@ class MouseoverWindow:
                 highlightInfo.produce_highlights.add(coord)
         return highlightInfo
 
+    '''
+    Based on moused over coords, draw everything in the window and
+    return the unit that is moused over
+    '''
     def draw_mouseover_info(self, gameboard, coords, local_player, gameturn):
         self.surface.fill((60, 30, 30))
         placeables = gameboard.squares.get(coords, [])
@@ -236,14 +308,14 @@ class MouseoverWindow:
             self.surface.blit(resource_text, (250, 170))
         return unit
 
-
+    
     def draw_unit_info(self, unit, local_player, gameturn, clear_first = False):
         if (clear_first == True):
             self.surface.fill((60, 30, 30))
         image = load_whole_image(unit.image_name)
         self.surface.blit(image, (20, 20))
         parts = unit.parts
-        activated_parts = gameturn[local_player].get(unit.coords, [])
+        activated_parts = gameturn[local_player].get(unit, [])
         y=self.part_zone_offset
         for part in parts:
             color = (255, 255, 255)
