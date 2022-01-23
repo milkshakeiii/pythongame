@@ -344,6 +344,9 @@ class MouseoverWindow:
             self.surface.blit(hp_text, (240, y))
             y+=self.part_zone_increment
 
+            #TODO Draw more info for producers and core
+            
+
 
 class ResearchWindow:
     def __init__(self):
