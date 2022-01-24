@@ -193,7 +193,10 @@ class Locomotor(Part):
 
 @dataclass(eq=False)
 class LocomotorAction:
-    move_target: tuple
+    move_target: tuple # in relative spaces
+
+    def energy_cost(self, locomotor):
+        return max(abs(move_target[0]), abs(move_target[1]))
 
 @dataclass(eq=False)
 class Collector(Part):
@@ -203,11 +206,16 @@ class Collector(Part):
     def resources_gained_per_resources_removed(self):
         return self.quality
 
-    def energy_per_unit_removed(self):
-        return (1/self.quality)
+    def energy_cost(self):
+        return (1/self.quality) * self.max_resources_removed_per_turn()
 
     def display_name(self):
         return "Collector"
+
+@dataclass(eq=False)
+class CollectorAction:
+    def energy_cost(self, collector):
+        return collector.energy_cost()
         
 @dataclass(eq=False)
 class Armament(Part):
@@ -229,6 +237,9 @@ class Armament(Part):
 class ArmamentAction:
     blast_index: int
 
+    def energy_cost(self, armament):
+        return armament.energy_cost
+
 @dataclass(eq=False)
 class Researcher(Part):
     def research_amount(self):
@@ -239,6 +250,11 @@ class Researcher(Part):
 
     def display_name(self):
         return "Researcher"
+
+@dataclass(eq=False)
+class ResearcherAction:
+    def energy_cost(self, researchers):
+        return researcher.energy_cost()
 
 @dataclass(eq=False)
 class EnergyCore(Part):
@@ -262,8 +278,8 @@ class Armor(Part):
 class Producer(Part):
     under_production: tuple #(team str, unit str)
     size_under_production: int
-    points_to_produce: float
-    current_production_points: float
+    points_to_produce: int
+    current_production_points: int
 
     def energy_cost(self):
         return (1/self.quality) * self.size
@@ -298,7 +314,11 @@ class Producer(Part):
 @dataclass(eq=False)
 class ProducerAction:
     produced_unit: tuple #(team str, unit str)
-    output_coords: tuple
+    out_coords: tuple
+
+    def energy_cost(self, producer):
+        return producer.energy_cost()
+        
     
 class Gameturn:
     def __init__(self, players):
@@ -321,6 +341,22 @@ class Gameturn:
 
     def __setitem__(self, key, value):
         self.players_to_units_to_parts_to_actions[key] = value
+
+    def unit_pending_true_and_max_energy(self, player, unit):
+        parts = unit.parts
+        max_energy = 0
+        true_energy = 0
+        for part in parts:
+            if type(part) == EnergyCore:
+                max_energy = part.maximum_energy()
+                true_energy = part.current_energy
+
+        pending_energy = true_energy
+        for part, action in self[player].get(unit, dict()):
+            pending_energy -= action.energy_cost(part)
+
+        return (pending_energy, true_energy, max_energy)
+            
 
 
 

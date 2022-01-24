@@ -168,6 +168,16 @@ class MouseoverWindow:
         self.locked = None
         self.ui_active_part = None
 
+    def mouse_to_part_index(self, mouse_pos):
+        part_zone_y = (mouse_pos[1] - self.part_zone_offset)
+        return part_zone_y // self.part_zone_increment
+
+    def legitimate_part_index(self, clicked_part_index, mouse_pos):
+        return ((self.locked != None) and
+                (clicked_part_index >= 0) and
+                (clicked_part_index < len(self.locked.parts)) and
+                (mouse_pos[0] < TOP_LEFT_WINDOW_SHAPE[0]))
+
     def click(self,
               gameboard,
               clicked_coords,
@@ -176,12 +186,8 @@ class MouseoverWindow:
               local_player):
 
         ### CLICKING A PART
-        part_zone_y = (mouse_pos[1] - self.part_zone_offset)
-        clicked_part_index = part_zone_y // self.part_zone_increment
-        if ((self.locked != None) and
-            (clicked_part_index >= 0) and
-            (clicked_part_index < len(self.locked.parts)) and
-            (mouse_pos[0] < TOP_LEFT_WINDOW_SHAPE[0])):
+        clicked_part_index = self.mouse_to_part_index(mouse_pos)
+        if (self.legitimate_part_index(clicked_part_index, mouse_pos)):
             clicked_part = self.locked.parts[clicked_part_index]
             if gameturn.part_active(local_player,
                                     self.locked,
@@ -216,7 +222,9 @@ class MouseoverWindow:
                                           self.locked.size):
                 for coord in path:
                     if clicked_coords == coord:
-                        action = gameplay.LocomotorAction(move_target=coord)
+                        delta = (coord[0] - self.locked.coords[0],
+                                 coord[1] - self.locked.coords[1])
+                        action = gameplay.LocomotorAction(move_target=delta)
                         gameturn.add_action(local_player,
                                         self.locked,
                                         self.ui_active_part,
@@ -231,7 +239,7 @@ class MouseoverWindow:
                 if clicked_coords == coord:
                     build_unit = self.ui_active_part.under_production
                     action = gameplay.ProducerAction(produced_unit=build_unit,
-                                                     output_coords=coords)
+                                                     out_coords=clicked_coords)
                     gameturn.add_action(local_player,
                                         self.locked,
                                         self.ui_active_part,
@@ -244,7 +252,8 @@ class MouseoverWindow:
         new_lock = self.draw_mouseover_info(gameboard,
                                             clicked_coords,
                                             local_player,
-                                            gameturn)
+                                            gameturn,
+                                            mouse_pos)
         self.set_locked_unit(new_lock)
         ###
 
@@ -286,9 +295,14 @@ class MouseoverWindow:
     Based on moused over coords, draw everything in the window and
     return the unit that is moused over
     '''
-    def draw_mouseover_info(self, gameboard, coords, local_player, gameturn):
+    def draw_mouseover_info(self,
+                            gameboard,
+                            mouseover_coords,
+                            local_player,
+                            gameturn,
+                            mouse_pos):
         self.surface.fill((60, 30, 30))
-        placeables = gameboard.squares.get(coords, [])
+        placeables = gameboard.squares.get(mouseover_coords, [])
         resources = 0
         unit = None
         for placeable in placeables:
@@ -306,8 +320,29 @@ class MouseoverWindow:
                                                 False,
                                                 (255, 255, 255))
             self.surface.blit(resource_text, (250, 170))
+
+        if (self.locked != None):
+            self.draw_part_mouseover_info(mouse_pos)
+        
         return unit
 
+    def draw_part_mouseover_info(self, mouse_pos):
+        clicked_part_index = self.mouse_to_part_index(mouse_pos)
+        part = None
+        if (self.legitimate_part_index(clicked_part_index, mouse_pos)):
+            part = self.locked.parts[clicked_part_index]
+        if type(part) == gameplay.Producer:
+            unit_name = "None"
+            progress = "0/0"
+            if part.under_production != None:
+                unit_name = part.under_production[1]
+                progress = (str(part.current_production_points) + '/' +
+                            str(part.points_to_produce))
+            under_production_string = "-> " + unit_name + " " + progress
+            producer_text = DEFAULT_FONT.render(under_production_string,
+                                                False,
+                                                (255, 255, 255))
+            self.surface.blit(producer_text, (10, 550))
     
     def draw_unit_info(self, unit, local_player, gameturn, clear_first = False):
         if (clear_first == True):
@@ -343,9 +378,6 @@ class MouseoverWindow:
             self.surface.blit(type_text, (110, y))
             self.surface.blit(hp_text, (240, y))
             y+=self.part_zone_increment
-
-            #TODO Draw more info for producers and core
-            
 
 
 class ResearchWindow:
@@ -503,7 +535,8 @@ if __name__=='__main__':
         mouseover_window.draw_mouseover_info(gamestate.gameboard,
                                              highlighted_coords,
                                              local_player,
-                                             working_turn)
+                                             working_turn,
+                                             playzone_mouse)
         research_mouseover = research_window.mouseover_check(playzone_mouse)
         if (research_mouseover != None):
             mouseover_window.draw_unit_info(research_mouseover,
