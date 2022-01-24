@@ -342,7 +342,7 @@ class Gameturn:
     def __setitem__(self, key, value):
         self.players_to_units_to_parts_to_actions[key] = value
 
-    def unit_pending_true_and_max_energy(self, player, unit):
+    def unit_pending_true__max_gain_energy(self, player, unit):
         parts = unit.parts
         max_energy = 0
         true_energy = 0
@@ -350,12 +350,13 @@ class Gameturn:
             if type(part) == EnergyCore:
                 max_energy = part.maximum_energy()
                 true_energy = part.current_energy
+                gain_energy = part.energy_recharge_per_turn()
 
         pending_energy = true_energy
         for part, action in self[player].get(unit, dict()):
             pending_energy -= action.energy_cost(part)
 
-        return (pending_energy, true_energy, max_energy)
+        return (pending_energy, true_energy, max_energy, gain_energy)
             
 
 

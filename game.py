@@ -379,6 +379,30 @@ class MouseoverWindow:
             self.surface.blit(hp_text, (240, y))
             y+=self.part_zone_increment
 
+        energy_text = DEFAULT_FONT.render("Energy: ",
+                                          False,
+                                          (255, 255, 255))
+        self.surface.blit(energy_text, (210, 20))
+        amount_info = gameturn.unit_pending_true__max_gain_energy(local_player,
+                                                                  unit)
+        pending, true, maximum, gain = map(str, amount_info)
+        amount_string = "("+true+")"
+        energy_text = DEFAULT_FONT.render(amount_string,
+                                          False,
+                                          (255, 255, 255))
+        self.surface.blit(energy_text, (210, 44))
+        amount_string = pending+"+"+gain
+        energy_text = DEFAULT_FONT.render(amount_string,
+                                          False,
+                                          (255, 255, 255))
+        self.surface.blit(energy_text, (210, 64))
+        amount_string = "/"+maximum
+        energy_text = DEFAULT_FONT.render(amount_string,
+                                          False,
+                                          (255, 255, 255))
+        self.surface.blit(energy_text, (210, 84))
+
+        
 
 class ResearchWindow:
     def __init__(self):
