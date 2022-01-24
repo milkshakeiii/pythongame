@@ -167,6 +167,7 @@ class MouseoverWindow:
         self.part_zone_increment = 30
         self.locked = None
         self.ui_active_part = None
+        self.intermediary_production_unit = None
 
     def mouse_to_part_index(self, mouse_pos):
         part_zone_y = (mouse_pos[1] - self.part_zone_offset)
@@ -183,7 +184,8 @@ class MouseoverWindow:
               clicked_coords,
               gameturn,
               mouse_pos,
-              local_player):
+              local_player,
+              research_mouseover):
 
         ### CLICKING A PART
         clicked_part_index = self.mouse_to_part_index(mouse_pos)
@@ -211,7 +213,7 @@ class MouseoverWindow:
                                         self.locked,
                                         self.ui_active_part,
                                         action)
-                    self.ui_active_part = None
+                    self.deselect_part()
                     return
                     
                 index += 1
@@ -229,23 +231,41 @@ class MouseoverWindow:
                                         self.locked,
                                         self.ui_active_part,
                                         action)
-                        self.ui_active_part = None
+                        self.deselect_part()
                         return
-                    
+
         if (type(self.ui_active_part) is gameplay.Producer and
-            self.ui_active_part.next_activation_produces()):
+            (self.ui_active_part.next_activation_produces() or
+             self.intermediary_production_unit != None)):
             for coord in self.ui_active_part.spawn_coords(self.locked.coords,
                                                           self.locked.size):
                 if clicked_coords == coord:
                     build_unit = self.ui_active_part.under_production
+                    if build_unit == None:
+                        build_unit = self.intermediary_production_unit
                     action = gameplay.ProducerAction(produced_unit=build_unit,
                                                      out_coords=clicked_coords)
                     gameturn.add_action(local_player,
                                         self.locked,
                                         self.ui_active_part,
                                         action)
-                    self.ui_active_part = None
+                    self.deselect_part()
                     return
+        elif (type(self.ui_active_part) is gameplay.Producer and
+              self.ui_active_part.under_production == None and
+              research_mouseover != None):
+            if (self.ui_active_part.points_per_activation() <
+                research_mouseover.production_cost):
+                act = gameplay.ProducerAction(produced_unit=research_mouseover,
+                                                 out_coords=None)
+                gameturn.add_action(local_player,
+                                    self.locked,
+                                    self.ui_active_part,
+                                    act)
+                self.deselect_part()
+            else:
+                self.intermediary_production_unit = research_mouseover
+            return
         ###
 
         ### LOCKING OR UNLOCKING
@@ -256,6 +276,10 @@ class MouseoverWindow:
                                             mouse_pos)
         self.set_locked_unit(new_lock)
         ###
+
+    def deselect_part(self):
+        self.ui_active_part = None
+        self.intermediary_production_unit = None
 
     def unclick(self):
         self.set_locked_unit(None)
@@ -285,7 +309,9 @@ class MouseoverWindow:
                                           self.locked.size):
                 for coord in path:
                     highlightInfo.move_highlights.add(coord)
-        if type(self.ui_active_part) is gameplay.Producer:
+        if (type(self.ui_active_part) is gameplay.Producer and
+            (self.ui_active_part.next_activation_produces() or
+             self.intermediary_production_unit != None)):
             for coord in self.ui_active_part.spawn_coords(self.locked.coords,
                                                           self.locked.size):
                 highlightInfo.produce_highlights.add(coord)
@@ -592,6 +618,7 @@ if __name__=='__main__':
                                        highlighted_coords,
                                        working_turn,
                                        playzone_mouse,
-                                       local_player)
+                                       local_player,
+                                       research_mouseover)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button != 1:
                 mouseover_window.unclick()

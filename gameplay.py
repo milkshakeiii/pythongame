@@ -276,7 +276,7 @@ class Armor(Part):
 
 @dataclass(eq=False)
 class Producer(Part):
-    under_production: tuple #(team str, unit str)
+    under_production: tuple #(team str, unit str) or None
     size_under_production: int
     points_to_produce: int
     current_production_points: int
@@ -288,6 +288,8 @@ class Producer(Part):
         return self.size
 
     def next_activation_produces(self):
+        if self.under_production == None:
+            return None
         current_amount = self.current_production_points
         next_amount = current_amount + self.points_per_activation()
         return next_amount >= self.points_to_produce
