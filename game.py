@@ -285,7 +285,7 @@ class MouseoverWindow:
         self.set_locked_unit(None)
 
     def set_locked_unit(self, locked):
-        self.ui_active_part = None
+        self.deselect_part()
         self.locked = locked
 
     '''
