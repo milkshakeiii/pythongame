@@ -563,6 +563,9 @@ def test_gamestate():
     test_unit_3 = game_io.unit_prototype_from_file("test_team_1", "big_1")
     test_unit_3.coords = (5, 20)
     gameboard.add_to_board(test_unit_3)
+    test_unit_4 = game_io.unit_prototype_from_file("test_team_1", "small_2")
+    test_unit_4.coords = (20, 5)
+    gameboard.add_to_board(test_unit_4)
 
 
     test_army = [game_io.unit_prototype_from_file("test_team_1", "mothership_1"),
