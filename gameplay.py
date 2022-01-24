@@ -196,7 +196,7 @@ class LocomotorAction:
     move_target: tuple # in relative spaces
 
     def energy_cost(self, locomotor):
-        return max(abs(move_target[0]), abs(move_target[1]))
+        return max(abs(self.move_target[0]), abs(self.move_target[1]))
 
 @dataclass(eq=False)
 class Collector(Part):
@@ -238,7 +238,7 @@ class ArmamentAction:
     blast_index: int
 
     def energy_cost(self, armament):
-        return armament.energy_cost
+        return armament.energy_cost()
 
 @dataclass(eq=False)
 class Researcher(Part):
@@ -353,7 +353,7 @@ class Gameturn:
                 gain_energy = part.energy_recharge_per_turn()
 
         pending_energy = true_energy
-        for part, action in self[player].get(unit, dict()):
+        for part, action in self[player].get(unit, dict()).items():
             pending_energy -= action.energy_cost(part)
 
         return (pending_energy, true_energy, max_energy, gain_energy)

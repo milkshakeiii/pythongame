@@ -385,7 +385,11 @@ class MouseoverWindow:
         self.surface.blit(energy_text, (210, 20))
         amount_info = gameturn.unit_pending_true__max_gain_energy(local_player,
                                                                   unit)
-        pending, true, maximum, gain = map(str, amount_info)
+        pending, true, maximum, gain = amount_info
+        pending = "%6.2f" % (pending)
+        true = "%6.2f" % (true)
+        maximum = str(maximum)
+        gain = str(gain)
         amount_string = "("+true+")"
         energy_text = DEFAULT_FONT.render(amount_string,
                                           False,
