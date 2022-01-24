@@ -253,7 +253,7 @@ class Researcher(Part):
 
 @dataclass(eq=False)
 class ResearcherAction:
-    def energy_cost(self, researchers):
+    def energy_cost(self, researcher):
         return researcher.energy_cost()
 
 @dataclass(eq=False)

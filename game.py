@@ -195,12 +195,25 @@ class MouseoverWindow:
                                     self.locked,
                                     clicked_part):
                 gameturn.remove_action(local_player, self.locked, clicked_part)
-            else:
+            elif type(clicked_part) == gameplay.Researcher:
+                action = gameplay.ResearcherAction()
+                gameturn.add_action(local_player,
+                                    self.locked,
+                                    clicked_part,
+                                    action)
+            elif type(clicked_part) == gameplay.Collector:
+                action = gameplay.CollectorAction()
+                gameturn.add_action(local_player,
+                                    self.locked,
+                                    clicked_part,
+                                    action)
+            elif not (type(clicked_part) in [gameplay.EnergyCore,
+                                             gameplay.Armor]):
                 self.ui_active_part = clicked_part
             return
         ###
 
-        ### CLICKING AN ACTION 
+        ### CLICKING WHILE A PART IS ACTIVE 
         if type(self.ui_active_part) is gameplay.Armament:
             shape = self.ui_active_part.shape_type
             index = 0
@@ -228,9 +241,9 @@ class MouseoverWindow:
                                  coord[1] - self.locked.coords[1])
                         action = gameplay.LocomotorAction(move_target=delta)
                         gameturn.add_action(local_player,
-                                        self.locked,
-                                        self.ui_active_part,
-                                        action)
+                                            self.locked,
+                                            self.ui_active_part,
+                                            action)
                         self.deselect_part()
                         return
 
