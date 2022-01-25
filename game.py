@@ -125,8 +125,20 @@ class DisplayBoard:
     Based on the submitted actions in gameturn, draw highlights of
     different colors for movemenet, attack, production.
     '''
-    def draw_working_turn(self, gameturn):
-        pass # TODO
+    def draw_working_turn(self, gameturn, player):
+        for unit in gameturn[player]:
+            for part in gameturn[player][unit]:
+                action = gameturn[player][unit][part]
+                if type(action) is gameplay.ArmamentAction:
+                    blast_paths = part.shape_type.blast_paths(unit.coords,
+                                                              part.size,
+                                                              unit.size)
+                    chosen_blast = blast_paths[action.blast_index]
+                    for square in chosen_blast:
+                        self.draw_square(square[0],
+                                         square[1],
+                                         HighlightColor.WHITE)
+                        
 
     '''
     Based on the dicts in highlight_info, draw highlights for UI
@@ -603,7 +615,13 @@ def test_gamestate():
     test_player = gameplay.Player(0, 0, test_army, research_amount=20)
 
     return gameplay.Gamestate(gameboard, [test_player])
-        
+
+
+class Gameflow:
+    def __init__(self, gamestate, turnsources):
+        self.gamestate = gamestate
+        self.turnsources = turnsources
+
 
 if __name__=='__main__':
     pygame.init()
@@ -642,7 +660,7 @@ if __name__=='__main__':
                                             clear_first=True)
 
         additional_highlights: HighlightInfo = mouseover_window.get_highlights()
-        display_board.draw_working_turn(working_turn)
+        display_board.draw_working_turn(working_turn, local_player)
         display_board.draw_highlights(additional_highlights)
         
         display.play_screen.blit(mouseover_window.surface, (0, 0))
@@ -665,6 +683,5 @@ if __name__=='__main__':
                                        local_player,
                                        research_mouseover)
                 submit_turn = research_window.click(playzone_mouse)
-                print(submit_turn)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button != 1:
                 mouseover_window.unclick()
