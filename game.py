@@ -469,6 +469,27 @@ class ResearchWindow:
         self.research_boxes = []
         self.prototypes = dict() # box row, column to Unit prototype
 
+        self.draw_button_text("Submit turn", (70, 50, 70))
+
+    def draw_button_text(self, text, button_color):
+        next_turn_button = pygame.Surface((155, 100))
+        next_turn_button.fill(button_color)
+        self.surface.blit(next_turn_button, (155, 232))
+        
+        submit_text = DEFAULT_FONT.render(text,
+                                          False,
+                                          (255, 255, 255))
+        self.surface.blit(submit_text, (165, 255))
+        
+    '''
+    Return true if submit turn button clicked else false
+    '''
+    def click(self, mouse_pos):
+        research_pos = self.local_mouse_pos(mouse_pos)
+        x_on_button = 155 < research_pos[0] < BOTTOM_LEFT_WINDOW_SHAPE[0]
+        y_on_button = 232 < research_pos[1] < BOTTOM_LEFT_WINDOW_SHAPE[1]
+        return x_on_button and y_on_button
+
     def research_box_position(self, row, column):
         return (column*self.research_box_width,
                 self.prototype_zone_offset + row*self.research_box_height)
@@ -511,13 +532,17 @@ class ResearchWindow:
                 row.append(research_box)
                 
             self.research_boxes.append(row)
+
+    def local_mouse_pos(self, mouse_pos):
+        research_pos = (mouse_pos[0],
+                        mouse_pos[1] - TOP_LEFT_WINDOW_SHAPE[1])
+        return research_pos
         
     '''
     Returns a unit prototype if a unit is moused over, else None
     '''
     def mouseover_check(self, mouse_pos):
-        research_pos = (mouse_pos[0],
-                        mouse_pos[1] - TOP_LEFT_WINDOW_SHAPE[1])
+        research_pos = self.local_mouse_pos(mouse_pos)
         prototype_zone_mouse = (research_pos[0],
                                 research_pos[1] - self.prototype_zone_offset)
         research_box_row = prototype_zone_mouse[1]//self.research_box_height
@@ -626,7 +651,8 @@ if __name__=='__main__':
         display.play_screen.blit(display_board.surface,
                                  (TOP_LEFT_WINDOW_SHAPE[0], 0))
         display.draw()
-        
+
+        submit_turn = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -638,5 +664,7 @@ if __name__=='__main__':
                                        playzone_mouse,
                                        local_player,
                                        research_mouseover)
+                submit_turn = research_window.click(playzone_mouse)
+                print(submit_turn)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button != 1:
                 mouseover_window.unclick()
