@@ -10,6 +10,8 @@ ctypes.windll.user32.SetProcessDPIAware()
 pygame.font.init()
 DEFAULT_FONT = pygame.font.SysFont('consolas', 22)
 
+CLOCK = pygame.time.Clock()
+
 GAME_SHAPE = (1600, 900)
 TOP_LEFT_WINDOW_SHAPE = (310, 600)
 BOTTOM_LEFT_WINDOW_SHAPE = (310, 300)
@@ -58,6 +60,9 @@ class HighlightColor(Enum):
     GREEN = 2
     BLUE = 3
     WHITE = 4
+    LIGHT_RED = 5
+    LIGHT_GREEN = 6
+    LIGHT_BLUE = 7
 
 
 class DisplayBoard:
@@ -70,7 +75,10 @@ class DisplayBoard:
             HighlightColor.RED: load_image_square("highlight_square_red"),
             HighlightColor.GREEN: load_image_square("highlight_square_green"),
             HighlightColor.BLUE: load_image_square("highlight_square_blue"),
-            HighlightColor.WHITE: load_image_square("highlight_square_white")}
+            HighlightColor.WHITE: load_image_square("highlight_square_white"),
+            HighlightColor.LIGHT_RED: load_image_square("light_red"),
+            HighlightColor.LIGHT_BLUE: load_image_square("light_blue"),
+            HighlightColor.LIGHT_GREEN: load_image_square("light_green"),}
         self.highlighted_square = None
 
     def surface_for_square(self, x, y, highlight=None):
@@ -137,7 +145,28 @@ class DisplayBoard:
                     for square in chosen_blast:
                         self.draw_square(square[0],
                                          square[1],
-                                         HighlightColor.WHITE)
+                                         HighlightColor.LIGHT_RED)
+                if type(action) is gameplay.LocomotorAction:
+                    move_paths = part.shape_type.move_paths(unit.coords,
+                                                            part.size,
+                                                            unit.size)
+                    target_coords = (unit.coords[0] + action.move_target[0],
+                                     unit.coords[1] + action.move_target[1])
+                    for path in move_paths:
+                        if target_coords not in path:
+                            continue
+                        for square in path:
+                            self.draw_square(square[0],
+                                             square[1],
+                                             HighlightColor.LIGHT_GREEN)
+                            if square == target_coords:
+                                break
+                if type(action) is gameplay.ProducerAction:
+                    if action.out_coords != None:
+                        self.draw_square(action.out_coords[0],
+                                         action.out_coords[1],
+                                         HighlightColor.LIGHT_BLUE)
+                                
                         
 
     '''
@@ -262,12 +291,13 @@ class MouseoverWindow:
         if (type(self.ui_active_part) is gameplay.Producer and
             (self.ui_active_part.next_activation_produces() or
              self.intermediary_production_unit != None)):
+            build_unit = self.ui_active_part.under_production
+            if build_unit == None:
+                build_unit = self.intermediary_production_unit
             for coord in self.ui_active_part.spawn_coords(self.locked.coords,
-                                                          self.locked.size):
+                                                          self.locked.size,
+                                                          build_unit.size):
                 if clicked_coords == coord:
-                    build_unit = self.ui_active_part.under_production
-                    if build_unit == None:
-                        build_unit = self.intermediary_production_unit
                     action = gameplay.ProducerAction(produced_unit=build_unit,
                                                      out_coords=clicked_coords)
                     gameturn.add_action(local_player,
@@ -337,8 +367,12 @@ class MouseoverWindow:
         if (type(self.ui_active_part) is gameplay.Producer and
             (self.ui_active_part.next_activation_produces() or
              self.intermediary_production_unit != None)):
+            spawnee = self.ui_active_part.under_production
+            if self.intermediary_production_unit != None:
+                spawnee = self.intermediary_production_unit
             for coord in self.ui_active_part.spawn_coords(self.locked.coords,
-                                                          self.locked.size):
+                                                          self.locked.size,
+                                                          spawnee.size):
                 highlightInfo.produce_highlights.add(coord)
         return highlightInfo
 
@@ -373,22 +407,34 @@ class MouseoverWindow:
             self.surface.blit(resource_text, (250, 170))
 
         if (self.locked != None):
-            self.draw_part_mouseover_info(mouse_pos)
+            self.draw_part_mouseover_info(mouse_pos, gameturn, local_player)
         
         return unit
 
-    def draw_part_mouseover_info(self, mouse_pos):
+    def draw_part_mouseover_info(self, mouse_pos, gameturn, local_player):
         clicked_part_index = self.mouse_to_part_index(mouse_pos)
         part = None
         if (self.legitimate_part_index(clicked_part_index, mouse_pos)):
             part = self.locked.parts[clicked_part_index]
         if type(part) == gameplay.Producer:
             unit_name = "None"
-            progress = "0/0"
+            part_dict = gameturn[local_player].get(self.locked, dict())
+            action = part_dict.get(part, None)
             if part.under_production != None:
-                unit_name = part.under_production[1]
-                progress = (str(part.current_production_points) + '/' +
-                            str(part.points_to_produce))
+                unit_name = part.under_production.unit_name
+            if action != None:
+                unit_name = action.produced_unit.unit_name
+            this_turn_addition = 0
+            if action != None:
+                this_turn_addition = part.points_per_activation()
+            points_to_produce = "-"
+            if part.under_production != None:
+                points_to_produce = part.points_to_produce()
+            if action != None:
+                points_to_produce = action.produced_unit.production_cost
+            progress = (str(part.current_production_points) +
+                        "+" + str(this_turn_addition)+ '/' +
+                        str(points_to_produce))
             under_production_string = "-> " + unit_name + " " + progress
             producer_text = DEFAULT_FONT.render(under_production_string,
                                                 False,
@@ -641,8 +687,12 @@ if __name__=='__main__':
     local_player = gamestate.players[0]
     research_window.draw_player_info(local_player)
     working_turn = gameplay.Gameturn(gamestate.players)
-    
+
+    frame = 0
     while True:
+        frame += 1
+        CLOCK.tick()
+        
         display_board.resurface()
         
         playzone_mouse = display.playzone_mouse(pygame.mouse.get_pos())
@@ -685,3 +735,6 @@ if __name__=='__main__':
                 submit_turn = research_window.click(playzone_mouse)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button != 1:
                 mouseover_window.unclick()
+
+        if frame%1000 == 0:
+            print (CLOCK.get_fps())

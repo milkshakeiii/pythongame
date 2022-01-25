@@ -113,8 +113,6 @@ def unit_prototype_from_file(team_name, unit_name):
                             quality=part_quality,
                             damage=0,
                             under_production=None,
-                            size_under_production=1,
-                            points_to_produce=0,
                             current_production_points=0)
         else:
             raise Exception("Unrecognized part name: " + part_name)

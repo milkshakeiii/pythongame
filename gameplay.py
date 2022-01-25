@@ -276,10 +276,14 @@ class Armor(Part):
 
 @dataclass(eq=False)
 class Producer(Part):
-    under_production: tuple #(team str, unit str) or None
-    size_under_production: int
-    points_to_produce: int
+    under_production: Unit
     current_production_points: int
+
+    def size_under_production(self):
+        return self.under_production.size
+
+    def points_to_produce(self):
+        return self.under_production.production_cost
 
     def energy_cost(self):
         return (1/self.quality) * self.size
@@ -292,21 +296,21 @@ class Producer(Part):
             return None
         current_amount = self.current_production_points
         next_amount = current_amount + self.points_per_activation()
-        return next_amount >= self.points_to_produce
+        return next_amount >= self.points_to_produce()
 
-    def spawn_coords(self, spawner_coords, spawner_size):
+    def spawn_coords(self, spawner_coords, spawner_size, spawnee_size):
         spawn_spots = set()
-        for y in [spawner_coords[1]-self.size_under_production,
+        for y in [spawner_coords[1]-spawnee_size,
                   spawner_coords[1]+spawner_size]:
-            for x in range(spawner_coords[0]-self.size_under_production,
+            for x in range(spawner_coords[0]-spawnee_size,
                            spawner_coords[0]+spawner_size+1):
-                if unit_placement_in_bounds((x, y), self.size_under_production):
+                if unit_placement_in_bounds((x, y), spawnee_size):
                     spawn_spots.add((x, y))
-        for x in [spawner_coords[0]-self.size_under_production,
+        for x in [spawner_coords[0]-spawnee_size,
                   spawner_coords[0]+spawner_size]:
-            for y in range(spawner_coords[1]-self.size_under_production,
+            for y in range(spawner_coords[1]-spawnee_size,
                            spawner_coords[1]+spawner_size+1):
-                if unit_placement_in_bounds((x, y), self.size_under_production):
+                if unit_placement_in_bounds((x, y), spawnee_size):
                     spawn_spots.add((x, y))
         return spawn_spots
 
@@ -315,7 +319,7 @@ class Producer(Part):
 
 @dataclass(eq=False)
 class ProducerAction:
-    produced_unit: tuple #(team str, unit str)
+    produced_unit: Unit
     out_coords: tuple
 
     def energy_cost(self, producer):
