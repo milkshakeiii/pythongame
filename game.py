@@ -451,14 +451,16 @@ class ResearchWindow:
     def __init__(self):
         self.surface = pygame.Surface(BOTTOM_LEFT_WINDOW_SHAPE)
         self.surface.fill((30, 60, 30))
+        self.resource_image = load_whole_image("medium_resource")
         progress_image = DEFAULT_FONT.render("Research Progress:",
                                              False,
                                              (255, 255, 255))
-        resources_image = DEFAULT_FONT.render("Resources Available:",
-                                              False,
-                                              (255, 255, 255))
-        self.surface.blit(resources_image, (10, 260))
+        resources_text = DEFAULT_FONT.render("Store:",
+                                             False,
+                                             (255, 255, 255))
+        self.surface.blit(resources_text, (30, 255))
         self.surface.blit(progress_image, (10, 10))
+        self.surface.blit(self.resource_image, (0, 250))
         
         self.research_box_surface = load_whole_image("research_box")
         self.research_box_width = self.research_box_surface.get_width()
@@ -538,7 +540,7 @@ class ResearchWindow:
         resource_text = DEFAULT_FONT.render(str(player.resource_amount),
                                             False,
                                             (255, 255, 255))
-        self.surface.blit(resource_text, (250, 260))
+        self.surface.blit(resource_text, (105, 255))
 
         for i in range(len(player.unit_prototypes)):
             prototype = player.unit_prototypes[i]
