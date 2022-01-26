@@ -363,6 +363,12 @@ class Gameturn:
 
         return (pending_energy, true_energy, max_energy, gain_energy)
 
+def merge_turns(turns):
+    merged_turn = Gameturn([])
+    for turn in turns:
+        for player in turn.players_to_units_to_parts_to_actions:
+            merged_turn[player] = turn[player]
+    return merged_turn
 
 def default_turn_for(gamestate, player):
     return Gameturn(gamestate.players)

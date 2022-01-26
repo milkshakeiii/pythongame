@@ -747,6 +747,7 @@ def run_game(gameflow):
             turn_number = str(len(gameflow.gamestates))
             research_window.draw_button_text("Submit turn " + turn_number,
                                              (50, 70, 50))
+            print("Turn " + turn_number)
             
         if frame%1000 == 0:
             print (clock.get_fps())
