@@ -324,7 +324,6 @@ class ProducerAction:
 
     def energy_cost(self, producer):
         return producer.energy_cost()
-        
     
 class Gameturn:
     def __init__(self, players):
@@ -363,8 +362,18 @@ class Gameturn:
             pending_energy -= action.energy_cost(part)
 
         return (pending_energy, true_energy, max_energy, gain_energy)
-            
 
+            
+def copy_and_get_advanced_gamestate(starting_gamestate, do_turn):
+    next_gamestate = copy.deepcopy(starting_gamestate)
+    mutate_and_advance_gamestate(next_gamestate, do_turn)
+    return next_gamestate
+
+
+def advance_gamestate_via_mutation(gamestate, do_turn):
+    # mutate gamestate in a lot of ways
+
+    return gamestate
 
 
 

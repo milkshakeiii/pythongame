@@ -2,15 +2,17 @@ from enum import Enum
 
 import pygame
 import sys, os, ctypes
+import copy
+
 import game_io
 import gameplay
+import gameflow
+
 ctypes.windll.user32.SetProcessDPIAware()
 
 
 pygame.font.init()
 DEFAULT_FONT = pygame.font.SysFont('consolas', 22)
-
-CLOCK = pygame.time.Clock()
 
 GAME_SHAPE = (1600, 900)
 TOP_LEFT_WINDOW_SHAPE = (310, 600)
@@ -226,8 +228,38 @@ class MouseoverWindow:
               gameturn,
               mouse_pos,
               local_player,
-              research_mouseover):
+              research_mouseover,
+              turn_submitted):
 
+        click_handled = False
+        if (not turn_submitted):
+            click_handled = self.gameturn_input_for_click(gameboard,
+                                                          clicked_coords,
+                                                          gameturn,
+                                                          mouse_pos,
+                                                          local_player,
+                                                          research_mouseover)
+
+        # Locking or unlocking
+        if (not click_handled):
+            new_lock = self.draw_mouseover_info(gameboard,
+                                                clicked_coords,
+                                                local_player,
+                                                gameturn,
+                                                mouse_pos)
+            self.set_locked_unit(new_lock)
+
+    '''
+    return True iff the click has been handled and shouldn't be
+    checked for locking/unlocking
+    '''
+    def gameturn_input_for_click(self,
+                                 gameboard,
+                                 clicked_coords,
+                                 gameturn,
+                                 mouse_pos,
+                                 local_player,
+                                 research_mouseover):
         ### CLICKING A PART
         clicked_part_index = self.mouse_to_part_index(mouse_pos)
         if (self.legitimate_part_index(clicked_part_index, mouse_pos)):
@@ -251,7 +283,7 @@ class MouseoverWindow:
             elif not (type(clicked_part) in [gameplay.EnergyCore,
                                              gameplay.Armor]):
                 self.ui_active_part = clicked_part
-            return
+            return True
         ###
 
         ### CLICKING WHILE A PART IS ACTIVE 
@@ -268,7 +300,7 @@ class MouseoverWindow:
                                         self.ui_active_part,
                                         action)
                     self.deselect_part()
-                    return
+                    return True
                     
                 index += 1
         if type(self.ui_active_part) is gameplay.Locomotor:
@@ -286,7 +318,7 @@ class MouseoverWindow:
                                             self.ui_active_part,
                                             action)
                         self.deselect_part()
-                        return
+                        return True
 
         if (type(self.ui_active_part) is gameplay.Producer and
             (self.ui_active_part.next_activation_produces() or
@@ -305,7 +337,7 @@ class MouseoverWindow:
                                         self.ui_active_part,
                                         action)
                     self.deselect_part()
-                    return
+                    return True
         elif (type(self.ui_active_part) is gameplay.Producer and
               self.ui_active_part.under_production == None and
               research_mouseover != None):
@@ -320,17 +352,10 @@ class MouseoverWindow:
                 self.deselect_part()
             else:
                 self.intermediary_production_unit = research_mouseover
-            return
+            return True
         ###
-
-        ### LOCKING OR UNLOCKING
-        new_lock = self.draw_mouseover_info(gameboard,
-                                            clicked_coords,
-                                            local_player,
-                                            gameturn,
-                                            mouse_pos)
-        self.set_locked_unit(new_lock)
-        ###
+        
+        return False
 
     def deselect_part(self):
         self.ui_active_part = None
@@ -631,45 +656,10 @@ class ResearchWindow:
             self.prototypes[box_coords] = prototype
 
         self.draw_boxes(player)
-        
-
-def test_gamestate():
-    gameboard = gameplay.Gameboard()
-    test_resource = game_io.resource_pile_factory((6,6), 50)
-    gameboard.add_to_board(test_resource)
-    test_resource = game_io.resource_pile_factory((6,7), 4)
-    gameboard.add_to_board(test_resource)
-    test_unit = game_io.unit_prototype_from_file("test_team_1", "mothership_1")
-    test_unit.coords = (5, 5)
-    gameboard.add_to_board(test_unit)
-    test_unit_2 = game_io.unit_prototype_from_file("test_team_1", "small_1")
-    test_unit_2.coords = (20, 15)
-    gameboard.add_to_board(test_unit_2)
-    test_unit_3 = game_io.unit_prototype_from_file("test_team_1", "big_1")
-    test_unit_3.coords = (5, 20)
-    gameboard.add_to_board(test_unit_3)
-    test_unit_4 = game_io.unit_prototype_from_file("test_team_1", "small_2")
-    test_unit_4.coords = (20, 5)
-    gameboard.add_to_board(test_unit_4)
 
 
-    test_army = [game_io.unit_prototype_from_file("test_team_1", "mothership_1"),
-                 game_io.unit_prototype_from_file("test_team_1", "small_1"),
-                 game_io.unit_prototype_from_file("test_team_1", "small_2"),
-                 game_io.unit_prototype_from_file("test_team_1", "big_1")]
-
-    test_player = gameplay.Player(0, 0, test_army, research_amount=20)
-
-    return gameplay.Gamestate(gameboard, [test_player])
-
-
-class Gameflow:
-    def __init__(self, gamestate, turnsources):
-        self.gamestate = gamestate
-        self.turnsources = turnsources
-
-
-if __name__=='__main__':
+def run_game(gameflow):
+    clock = pygame.time.Clock()
     pygame.init()
     display = Display()
 
@@ -677,7 +667,7 @@ if __name__=='__main__':
     research_window = ResearchWindow()
     display_board = DisplayBoard()
     
-    gamestate = test_gamestate()
+    gamestate = gameflow.most_recent_gamestate_copy()
 
     display_board.load_gameboard(gamestate.gameboard)
     display_board.resurface()
@@ -688,10 +678,11 @@ if __name__=='__main__':
     research_window.draw_player_info(local_player)
     working_turn = gameplay.Gameturn(gamestate.players)
 
+    turn_submitted = False
     frame = 0
     while True:
         frame += 1
-        CLOCK.tick()
+        clock.tick()
         
         display_board.resurface()
         
@@ -720,7 +711,6 @@ if __name__=='__main__':
                                  (TOP_LEFT_WINDOW_SHAPE[0], 0))
         display.draw()
 
-        submit_turn = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -731,10 +721,22 @@ if __name__=='__main__':
                                        working_turn,
                                        playzone_mouse,
                                        local_player,
-                                       research_mouseover)
-                submit_turn = research_window.click(playzone_mouse)
+                                       research_mouseover,
+                                       turn_submitted)
+                submit_turn_clicked = research_window.click(playzone_mouse)
+                if submit_turn_clicked:
+                    gameflow.submit_local_turn(working_turn)
+                turn_submitted = turn_submitted or submit_turn_clicked
             if event.type == pygame.MOUSEBUTTONDOWN and event.button != 1:
                 mouseover_window.unclick()
 
+        if (turn_submitted):
+            turn_submitted = not gameflow.try_to_advance_turn()
+            
         if frame%1000 == 0:
-            print (CLOCK.get_fps())
+            print (clock.get_fps())
+
+
+
+if __name__=='__main__':
+    run_game(gameflow.Gameflow([]))
