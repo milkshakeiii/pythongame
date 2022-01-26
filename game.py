@@ -552,7 +552,7 @@ class ResearchWindow:
         self.research_boxes = []
         self.prototypes = dict() # box row, column to Unit prototype
 
-        self.draw_button_text("Submit turn", (70, 50, 70))
+        self.draw_button_text("Submit turn 1", (50, 70, 50))
 
     def draw_button_text(self, text, button_color):
         next_turn_button = pygame.Surface((155, 100))
@@ -571,7 +571,10 @@ class ResearchWindow:
         research_pos = self.local_mouse_pos(mouse_pos)
         x_on_button = 155 < research_pos[0] < BOTTOM_LEFT_WINDOW_SHAPE[0]
         y_on_button = 232 < research_pos[1] < BOTTOM_LEFT_WINDOW_SHAPE[1]
-        return x_on_button and y_on_button
+        button_clicked = x_on_button and y_on_button
+        if (button_clicked):
+            self.draw_button_text("Submitted", (70, 50, 70))
+        return button_clicked
 
     def research_box_position(self, row, column):
         return (column*self.research_box_width,
@@ -681,6 +684,9 @@ def run_game(gameflow):
     turn_submitted = False
     frame = 0
     while True:
+        # local_player, working_turn, and gamestate
+        # will be new objects each turn
+        
         frame += 1
         clock.tick()
         
@@ -730,8 +736,17 @@ def run_game(gameflow):
             if event.type == pygame.MOUSEBUTTONDOWN and event.button != 1:
                 mouseover_window.unclick()
 
+        submit_success = False
         if (turn_submitted):
-            turn_submitted = not gameflow.try_to_advance_turn()
+            submit_success = gameflow.try_to_advance_turn()
+        if (submit_success):
+            gamestate = gameflow.most_recent_gamestate_copy()
+            turn_submitted = False
+            working_turn = gameplay.default_turn_for(gamestate, local_player)
+            local_player = gamestate.players[0]
+            turn_number = str(len(gameflow.gamestates))
+            research_window.draw_button_text("Submit turn " + turn_number,
+                                             (50, 70, 50))
             
         if frame%1000 == 0:
             print (clock.get_fps())

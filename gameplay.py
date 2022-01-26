@@ -363,6 +363,10 @@ class Gameturn:
 
         return (pending_energy, true_energy, max_energy, gain_energy)
 
+
+def default_turn_for(gamestate, player):
+    return Gameturn(gamestate.players)
+
             
 def copy_and_get_advanced_gamestate(starting_gamestate, do_turn):
     next_gamestate = copy.deepcopy(starting_gamestate)

@@ -8,12 +8,17 @@ class Gameflow:
     def __init__(self, turnsources):
         self.gamestates = [self.starting_gamestate()]
         self.turnsources = turnsources
+        self.tick = 0
 
     '''
     return True iff the turn has been successfully advanced
     '''
     def try_to_advance_turn(self):
-        return False
+        self.tick += 1
+        advance = (self.tick%1000 == 0)
+        if advance:
+            self.gamestates.append(self.most_recent_gamestate_copy())
+        return advance
 
     def submit_local_turn(self, turn):
         pass
