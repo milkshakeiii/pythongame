@@ -688,7 +688,7 @@ def run_game(gameflow):
         # will be new objects each turn
         
         frame += 1
-        clock.tick()
+        clock.tick(30)
         
         display_board.resurface()
         
@@ -756,5 +756,5 @@ def run_game(gameflow):
 
 if __name__=='__main__':
     gameflow = gameflow.Gameflow(0)
-    gameflow.start_game()
+    gameflow.start_game_host()
     run_game(gameflow)
