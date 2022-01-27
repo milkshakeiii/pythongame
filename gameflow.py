@@ -28,7 +28,19 @@ class InternetTurnsource(Turnsource):
     def __init__(self):
         pass
 
-
+# game creation flow:
+# host game, build gameflow, LocalTurnsource is set and local player number is 0
+# others join, call add_turnsource on network turnsources, send them back their
+# player numbers based on order of joining.  self.turnsources is populated.
+# start game, call start_game_host, first game state is built.  Send game state
+# to other players.  Also send list of all players.
+# 
+# Non host players now build game flow with correct local player numbers, and
+# start_game_non_host using the received gamestate.
+#
+# play proceeds with players submitting local turns and sending the turns to
+# all players.  game will stay in sync naturally, all players are now peers
+# and there is no host.
 class Gameflow:
     def __init__(self, local_player_number):
         self.local_turnsource = LocalTurnsource()
@@ -38,8 +50,11 @@ class Gameflow:
         self.gamestates = []
         self.tick = 0
 
-    def start_game(self):
+    def start_game_host(self):
         self.gamestates = [self.starting_gamestate()]
+
+    def start_game_non_host(self, starting_gamestate):
+        self.gamestates = [starting_gamestate]
 
     '''
     returns player number of new player
