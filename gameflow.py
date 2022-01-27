@@ -54,7 +54,7 @@ class Gameflow:
         for player in gamestate.players:
             if player.player_number == self.local_turnsource.player_number:
                 return player
-        raise Exception("Local player not found in most recent gamestate.")
+        raise Exception("Local player player number not found.")
 
     '''
     return True iff the turn has been successfully advanced
