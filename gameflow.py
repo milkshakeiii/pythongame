@@ -6,7 +6,7 @@ import game_io
 
 class Turnsource:
     def __init__(self):
-        pass
+        self.player_number = None # gets set when added to a gameflow
 
     def turn_ready(self):
         return NotImplemented
@@ -15,9 +15,6 @@ class Turnsource:
         return NotImplemented
 
 class LocalTurnsource(Turnsource):
-    def __init__(self):
-        self.turn = None
-
     def submit_turn(self, turn):
         self.turn = turn
 
@@ -33,12 +30,31 @@ class InternetTurnsource(Turnsource):
 
 
 class Gameflow:
-    def __init__(self, external_turnsources):
-        self.gamestates = [self.starting_gamestate()]
+    def __init__(self, local_player_number):
         self.local_turnsource = LocalTurnsource()
-        self.turnsources = set([self.local_turnsource])
-        self.turnsources.update(external_turnsources)
+        self.turnsources = set()
+        self.add_turnsource(self.local_turnsource)
+
+        self.gamestates = []
         self.tick = 0
+
+    def start_game(self):
+        self.gamestates = [self.starting_gamestate()]
+
+    '''
+    returns player number of new player
+    '''
+    def add_turnsource(self, turnsource):
+        player_number = len(self.turnsources)
+        self.turnsources.add(turnsource)
+        turnsource.player_number = player_number
+        return player_number
+
+    def get_local_player(self, gamestate):
+        for player in gamestate.players:
+            if player.player_number == self.local_turnsource.player_number:
+                return player
+        raise Exception("Local player not found in most recent gamestate.")
 
     '''
     return True iff the turn has been successfully advanced
@@ -61,7 +77,7 @@ class Gameflow:
         self.local_turnsource.submit_turn(turn)
 
     def starting_gamestate(self):
-        return test_gamestate()
+        return test_gamestate() # TODO
 
     def most_recent_gamestate_copy(self):
         return copy.deepcopy(self.gamestates[-1])
