@@ -31,9 +31,10 @@ class InternetTurnsource(Turnsource):
 # game creation flow:
 # host game, build gameflow, LocalTurnsource is set and local player number is 0
 # others join, call add_turnsource on network turnsources, send them back their
-# player numbers based on order of joining.  self.turnsources is populated.
-# start game, call start_game_host, first game state is built.  Send game state
-# to other players.  Also send list of all players.
+# player numbers based on order of joining.  new players report their team.
+# self.turnsources is populated. start game, call start_game_host, first game
+# state is built.  Send game state to other players.  Also send list of all
+# players.
 # 
 # Non host players now build game flow with correct local player numbers, and
 # start_game_non_host using the received gamestate.
