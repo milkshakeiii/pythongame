@@ -1,10 +1,61 @@
 from dataclasses import dataclass
-from enum import Enum
 from abc import ABC, abstractmethod
+from typing import Dict, List, Tuple
 
+@dataclass(eq=False)
+class Placeable:
+    image_name: str
+    coords: tuple
+    size: int
+
+@dataclass(eq=False)
+class Part:
+    size: int
+    quality: float
+    damage: int
+
+    def max_hp(self):
+        return int(self.size*10*self.quality)
+
+    def display_name(self):
+        raise Exception("display_name called on part superclass")
+
+@dataclass(eq=False)
+class Unit(Placeable):
+    parts: List[Part]
+    owner_player_number: int
+    unit_name: str
+    production_cost: int
+    research_threshhold: float
+
+    def moveable_squares(self):
+        result = []
+        for part in parts:
+            if type(part) is Locomotor:
+                result += part.shape_type.move_paths(self.coords, part.size)
+        return result
+
+    def attackable_squares(self):
+        result = []
+        for part in parts:
+            if type(part) is Armament:
+                result += part.shape_type.move_paths(self.coords, part.size)
+        return result
+
+@dataclass(eq=False)
+class Player:
+    player_number: int
+    team_number: int
+    unit_prototypes: List[Unit]
+    resource_amount: int
+    research_amount: int
+
+    def research_fraction(self):
+        return 1-(199/200)**self.research_amount
+
+@dataclass(eq=False)
 class Gameboard:
-    def __init__(self):
-        self.squares = dict() # coords to list of placeables
+    squares: Dict[Tuple[int, int], List[Placeable]]
 
     def add_to_board(self, placeable):
         size = placeable.size
@@ -29,26 +80,10 @@ def unit_placement_in_bounds(coord, unit_size):
 def in_bounds(coord):
     return coord[0] < 43 and coord[1] < 30 and coord[0] >= 0 and coord[1] >= 0
 
+@dataclass(eq=False)
 class Gamestate:
-    def __init__(self, gameboard, players):
-        self.gameboard = gameboard
-        self.players = players
-
-class Player:
-    def __init__(self,
-                 player_number,
-                 team_number,
-                 unit_prototypes,
-                 resource_amount = 0,
-                 research_amount = 0.00):
-        self.player_number = player_number
-        self.team_number = team_number
-        self.unit_prototypes = unit_prototypes
-        self.resource_amount = resource_amount
-        self.research_amount = research_amount
-
-    def research_fraction(self):
-        return 1-(199/200)**self.research_amount
+    gameboard: Gameboard
+    players: List[Player]
 
 class ShapeType(ABC):
     '''
@@ -88,8 +123,6 @@ class Bishop(ShapeType):
                                      part_size,
                                      [(1, 1), (-1, 1), (1, -1), (-1, -1)],
                                      unit_size)
-                
-                
 
 class Rook(ShapeType):
     def move_paths(self, start_coord, part_size, unit_size):
@@ -105,7 +138,7 @@ class Knight(ShapeType):
                                      [(1, 2), (1, -2), (2, 1), (2, -1),
                                       (-1, 2), (-1, -2), (-2, 1), (-2, -1)],
                                      unit_size)
-    
+
 class King(ShapeType):
     def move_paths(self, start_coord, part_size, unit_size):
         many_paths = []
@@ -125,7 +158,7 @@ class King(ShapeType):
                     and in_bounds(candidate)):
                     blast.append(candidate)
         return [blast]
-    
+
 class Queen(ShapeType):
     def move_paths(self, start_coord, part_size, unit_size):
         return direct_path_move_path(start_coord,
@@ -135,48 +168,17 @@ class Queen(ShapeType):
                                      unit_size)
     
 @dataclass(eq=False)
-class Placeable:
-    image_name: str
-    coords: tuple
-    size: int
-
-@dataclass(eq=False)
 class ResourcePile(Placeable):
     amount: float
 
 @dataclass(eq=False)
-class Unit(Placeable):
-    parts: list
-    owner_player_number: int
-    unit_name: str
-    production_cost: int
-    research_threshhold: float
-
-    def moveable_squares(self):
-        result = []
-        for part in parts:
-            if type(part) is Locomotor:
-                result += part.shape_type.move_paths(self.coords, part.size)
-        return result
-
-    def attackable_squares(self):
-        result = []
-        for part in parts:
-            if type(part) is Armament:
-                result += part.shape_type.move_paths(self.coords, part.size)
-        return result
+class Wall(Placeable):
+    pass
 
 @dataclass(eq=False)
-class Part:
-    size: int
-    quality: float
-    damage: int
-
-    def max_hp(self):
-        return int(self.size*10*self.quality)
-
-    def display_name(self):
-        raise Exception("display_name called on part superclass")
+class Action():
+    def energy_cost(self, part):
+        return NotImplemented
 
 @dataclass(eq=False)
 class Locomotor(Part):
@@ -192,7 +194,7 @@ class Locomotor(Part):
         return "Locomotor"
 
 @dataclass(eq=False)
-class LocomotorAction:
+class LocomotorAction(Action):
     move_target: tuple # in relative spaces
 
     def energy_cost(self, locomotor):
@@ -213,7 +215,7 @@ class Collector(Part):
         return "Collector"
 
 @dataclass(eq=False)
-class CollectorAction:
+class CollectorAction(Action):
     def energy_cost(self, collector):
         return collector.energy_cost()
         
@@ -234,7 +236,7 @@ class Armament(Part):
         return "Armament"
 
 @dataclass(eq=False)
-class ArmamentAction:
+class ArmamentAction(Action):
     blast_index: int
 
     def energy_cost(self, armament):
@@ -252,7 +254,7 @@ class Researcher(Part):
         return "Researcher"
 
 @dataclass(eq=False)
-class ResearcherAction:
+class ResearcherAction(Action):
     def energy_cost(self, researcher):
         return researcher.energy_cost()
 
@@ -318,18 +320,24 @@ class Producer(Part):
         return "Producer"
 
 @dataclass(eq=False)
-class ProducerAction:
+class ProducerAction(Action):
     produced_unit: Unit
     out_coords: tuple
 
     def energy_cost(self, producer):
         return producer.energy_cost()
-    
+
+def build_gameturn(players):
+    dictionary = dict()
+    for player in players:
+            dictionary[player] = dict()
+    return Gameturn(players_to_units_to_parts_to_actions=dictionary)
+
+@dataclass(eq=False)
 class Gameturn:
-    def __init__(self, players):
-        self.players_to_units_to_parts_to_actions = dict()
-        for player in players:
-            self[player] = dict()
+    players_to_units_to_parts_to_actions: Dict[Player,
+                                               Dict[Unit,
+                                                    Dict[Part, Action]]]
 
     def add_action(self, player, unit, part, action):
         self[player][unit] = self[player].get(unit, dict())
@@ -364,14 +372,14 @@ class Gameturn:
         return (pending_energy, true_energy, max_energy, gain_energy)
 
 def merge_turns(turns):
-    merged_turn = Gameturn([])
+    merged_turn = build_gameturn([])
     for turn in turns:
         for player in turn.players_to_units_to_parts_to_actions:
             merged_turn[player] = turn[player]
     return merged_turn
 
 def default_turn_for(gamestate, player):
-    return Gameturn(gamestate.players)
+    return build_gameturn(gamestate.players) # TODO
 
             
 def copy_and_get_advanced_gamestate(starting_gamestate, do_turn):

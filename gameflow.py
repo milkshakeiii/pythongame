@@ -101,7 +101,7 @@ class Gameflow:
 
 
 def test_gamestate():
-    gameboard = gameplay.Gameboard()
+    gameboard = gameplay.Gameboard(squares=dict())
     test_resource = game_io.resource_pile_factory((6,6), 50)
     gameboard.add_to_board(test_resource)
     test_resource = game_io.resource_pile_factory((6,7), 4)
@@ -125,6 +125,10 @@ def test_gamestate():
                  game_io.unit_prototype_from_file("test_team_1", "small_2"),
                  game_io.unit_prototype_from_file("test_team_1", "big_1")]
 
-    test_player = gameplay.Player(0, 0, test_army, research_amount=20)
+    test_player = gameplay.Player(player_number=0,
+                                  team_number=0,
+                                  unit_prototypes=test_army,
+                                  resource_amount=20,
+                                  research_amount=0)
 
-    return gameplay.Gamestate(gameboard, [test_player])
+    return gameplay.Gamestate(gameboard=gameboard, players=[test_player])
