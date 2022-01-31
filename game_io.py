@@ -69,15 +69,15 @@ def unit_prototype_from_file(team_name, unit_name):
             part_shape_name = part_shape_names.pop(0)
             part_shape = None
             if part_shape_name == "bishop":
-                part_shape = Bishop()
+                part_shape = ShapeTypeEnum.BISHOP
             elif part_shape_name == "rook":
-                part_shape = Rook()
+                part_shape = ShapeTypeEnum.ROOK
             elif part_shape_name == "knight":
-                part_shape = Knight()
+                part_shape = ShapeTypeEnum.KNIGHT
             elif part_shape_name == "king":
-                part_shape = King()
+                part_shape = ShapeTypeEnum.KING
             elif part_shape_name == "queen":
-                part_shape = Queen()
+                part_shape = ShapeTypeEnum.QUEEN
             else:
                 raise exception("Unrecognized part_shape value: " + part_shape_name)
         part = None

@@ -1,15 +1,36 @@
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from typing import Dict, List, Tuple
+from enum import Enum
+
+class ShapeTypeEnum(Enum):
+    BISHOP = 1
+    ROOK = 2
+    KNIGHT = 3
+    KING = 4
+    QUEEN = 5
+
+def shape_enum_to_object(enum: ShapeTypeEnum):
+    if enum == ShapeTypeEnum.BISHOP:
+        return Bishop()
+    elif enum == ShapeTypeEnum.ROOK:
+        return Rook()
+    elif enum == ShapeTypeEnum.KNIGHT:
+        return Knight()
+    elif enum == ShapeTypeEnum.KING:
+        return King()
+    elif enum == ShapeTypeEnum.QUEEN:
+        return Queen()
+    raise "Unrecognized enum"
 
 @dataclass(eq=False)
 class Placeable:
     image_name: str
-    coords: tuple
+    coords: Tuple[int, int]
     size: int
 
 @dataclass(eq=False)
-class Part:
+class Part():
     size: int
     quality: float
     damage: int
@@ -32,14 +53,16 @@ class Unit(Placeable):
         result = []
         for part in parts:
             if type(part) is Locomotor:
-                result += part.shape_type.move_paths(self.coords, part.size)
+                shape_type = shape_enum_to_object(part.shape_type)
+                result += shape_type.move_paths(self.coords, part.size)
         return result
 
     def attackable_squares(self):
         result = []
         for part in parts:
             if type(part) is Armament:
-                result += part.shape_type.move_paths(self.coords, part.size)
+                shape_type = shape_enum_to_object(part.shape_type)
+                result += shape_type.move_paths(self.coords, part.size)
         return result
 
 @dataclass(eq=False)
@@ -85,13 +108,12 @@ class Gamestate:
     gameboard: Gameboard
     players: List[Player]
 
-class ShapeType(ABC):
+class ShapeType():
     '''
     move_paths implementations return a list of paths
     where a path is a list of coords each of which
     depends on the previous being reachable
     '''
-    @abstractmethod
     def move_paths(self, start_coord, part_size, unit_size) -> list:
         return NotImplemented
 
@@ -182,7 +204,7 @@ class Action():
 
 @dataclass(eq=False)
 class Locomotor(Part):
-    shape_type: ShapeType
+    shape_type: ShapeTypeEnum
 
     def energy_per_square(self):
         return (1/self.quality)
@@ -195,7 +217,7 @@ class Locomotor(Part):
 
 @dataclass(eq=False)
 class LocomotorAction(Action):
-    move_target: tuple # in relative spaces
+    move_target: Tuple[int, int] # in relative spaces
 
     def energy_cost(self, locomotor):
         return max(abs(self.move_target[0]), abs(self.move_target[1]))
@@ -221,7 +243,7 @@ class CollectorAction(Action):
         
 @dataclass(eq=False)
 class Armament(Part):
-    shape_type: ShapeType
+    shape_type: ShapeTypeEnum
 
     def range(self):
         return self.size*2
@@ -229,7 +251,7 @@ class Armament(Part):
     def energy_cost(self):
         return (1/self.quality) * self.size
 
-    def damage(self):
+    def damage_dealt(self):
         return 10
 
     def display_name(self):

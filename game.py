@@ -140,18 +140,20 @@ class DisplayBoard:
             for part in gameturn[player][unit]:
                 action = gameturn[player][unit][part]
                 if type(action) is gameplay.ArmamentAction:
-                    blast_paths = part.shape_type.blast_paths(unit.coords,
-                                                              part.size,
-                                                              unit.size)
+                    shape_type = gameplay.shape_enum_to_object(part.shape_type)
+                    blast_paths = shape_type.blast_paths(unit.coords,
+                                                         part.size,
+                                                         unit.size)
                     chosen_blast = blast_paths[action.blast_index]
                     for square in chosen_blast:
                         self.draw_square(square[0],
                                          square[1],
                                          HighlightColor.LIGHT_RED)
                 if type(action) is gameplay.LocomotorAction:
-                    move_paths = part.shape_type.move_paths(unit.coords,
-                                                            part.size,
-                                                            unit.size)
+                    shape_type = gameplay.shape_enum_to_object(part.shape_type)
+                    move_paths = shape_type.move_paths(unit.coords,
+                                                       part.size,
+                                                       unit.size)
                     target_coords = (unit.coords[0] + action.move_target[0],
                                      unit.coords[1] + action.move_target[1])
                     for path in move_paths:
@@ -288,7 +290,8 @@ class MouseoverWindow:
 
         ### CLICKING WHILE A PART IS ACTIVE 
         if type(self.ui_active_part) is gameplay.Armament:
-            shape = self.ui_active_part.shape_type
+            shape_type_enum = self.ui_active_part.shape_type
+            shape = gameplay.shape_enum_to_object(shape_type_enum)
             index = 0
             for path in shape.blast_paths(self.locked.coords,
                                           self.ui_active_part.size,
@@ -304,7 +307,8 @@ class MouseoverWindow:
                     
                 index += 1
         if type(self.ui_active_part) is gameplay.Locomotor:
-            shape = self.ui_active_part.shape_type
+            shape_type_enum = self.ui_active_part.shape_type
+            shape = gameplay.shape_enum_to_object(shape_type_enum)
             for path in shape.move_paths(self.locked.coords,
                                           self.ui_active_part.size,
                                           self.locked.size):
@@ -376,14 +380,16 @@ class MouseoverWindow:
     def get_highlights(self) -> HighlightInfo:
         highlightInfo = HighlightInfo()
         if type(self.ui_active_part) is gameplay.Armament:
-            shape = self.ui_active_part.shape_type
+            shape_type_enum = self.ui_active_part.shape_type
+            shape = gameplay.shape_enum_to_object(shape_type_enum)
             for path in shape.blast_paths(self.locked.coords,
                                           self.ui_active_part.size,
                                           self.locked.size):
                 for coord in path:
                     highlightInfo.attack_highlights.add(coord)
         if type(self.ui_active_part) is gameplay.Locomotor:
-            shape = self.ui_active_part.shape_type
+            shape_type_enum = self.ui_active_part.shape_type
+            shape = gameplay.shape_enum_to_object(shape_type_enum)
             for path in shape.move_paths(self.locked.coords,
                                           self.ui_active_part.size,
                                           self.locked.size):
