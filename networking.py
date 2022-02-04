@@ -1,19 +1,36 @@
-@dataclass(eq=False)
-class Message:
-    pass
+import jsons
 
-@dataclass(eq=False)
-class WelcomePlayerNumber(Message):
-    pass
+from twisted.internet import reactor
+from twisted.protocols.basic import NetstringReceiver
+from twisted.internet.endpoints import TCP4ClientEndpoint, connectProtocol
 
-@dataclass(eq=False)
-class BeginGameEveryone(Message):
-    pass
+from dataclasses import dataclass
 
-@dataclass(eq=False)
-class MoreAboutMe(Message):
-    pass
+import gameplay
+import gameflow
+import messages
 
-@dataclass(eq=False)
-class ReportTurn(Message):
-    pass
+
+class MessageProtocol(NetstringReceiver):
+    def __init__(self, request):
+        self.request = request
+        self.response = None
+    
+    def encodeAndSendString(self, string):
+        self.sendString(bytes(string, "utf-8"))
+
+    def stringReceived(self, data):
+        self.stringDecoded(str(data, 'utf-8'))
+
+    def connectionMade(self):
+        self.encodeAndSendString(self.request)
+
+    def stringDecoded(self, string):
+        print(string)
+        self.transport.loseConnection()
+
+def send_message(message):
+    message_string = jsons.dumps(message, verbose=True)
+    point = TCP4ClientEndpoint(reactor, "localhost", 8007)
+    connectProtocol(point, MessageProtocol(message_string))
+    reactor.run()
