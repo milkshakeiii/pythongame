@@ -33,4 +33,4 @@ def send_message(message):
     message_string = jsons.dumps(message, verbose=True)
     point = TCP4ClientEndpoint(reactor, "localhost", 8007)
     connectProtocol(point, MessageProtocol(message_string))
-    reactor.run()
+    reactor.run() # TODO why does this block forever
