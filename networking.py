@@ -1,4 +1,5 @@
 import jsons
+import crochet
 
 from twisted.internet import reactor
 from twisted.protocols.basic import NetstringReceiver
@@ -10,6 +11,7 @@ import gameplay
 import gameflow
 import messages
 
+crochet.setup()
 
 class MessageProtocol(NetstringReceiver):
     def __init__(self, request):
@@ -29,8 +31,8 @@ class MessageProtocol(NetstringReceiver):
         print(string)
         self.transport.loseConnection()
 
+@crochet.wait_for(5)
 def send_message(message):
     message_string = jsons.dumps(message, verbose=True)
     point = TCP4ClientEndpoint(reactor, "localhost", 8007)
     connectProtocol(point, MessageProtocol(message_string))
-    reactor.run() # TODO why does this block forever
