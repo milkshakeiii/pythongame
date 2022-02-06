@@ -461,13 +461,6 @@ def merge_turns(turns):
 def default_turn_for(gamestate, player):
     return build_gameturn(gamestate.players) # TODO
 
-            
-def copy_and_get_advanced_gamestate(starting_gamestate, do_turn):
-    next_gamestate = copy.deepcopy(starting_gamestate)
-    mutate_and_advance_gamestate(next_gamestate, do_turn)
-    return next_gamestate
-
-
 def advance_gamestate_via_mutation(gamestate, do_turn):
     def do_blast():
         shape_type = shape_enum_to_object(part.shape_type)

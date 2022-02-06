@@ -80,10 +80,10 @@ class Gameflow:
         if ready:
             turns = [turnsource.get_turn() for turnsource in self.turnsources]
             merged_turn = gameplay.merge_turns(turns)
-            old_gamestate = self.most_recent_gamestate_copy()
+            old_gamestate = self.most_recent_gamestate()
             new_gamestate = gameplay.advance_gamestate_via_mutation(
                 old_gamestate, merged_turn)
-            self.gamestates.append(new_gamestate)
+            self.gamestates.append(copy.deepcopy(new_gamestate))
             return True
         return False
 
@@ -92,9 +92,6 @@ class Gameflow:
 
     def starting_gamestate(self):
         return test_gamestate() # TODO
-
-    def most_recent_gamestate_copy(self):
-        return copy.deepcopy(self.most_recent_gamestate())
 
     def most_recent_gamestate(self):
         return self.gamestates[-1]

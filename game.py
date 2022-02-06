@@ -682,7 +682,7 @@ def run_game(gameflow):
     research_window = ResearchWindow()
     display_board = DisplayBoard()
     
-    gamestate = gameflow.most_recent_gamestate_copy()
+    gamestate = gameflow.most_recent_gamestate()
 
     display_board.load_gameboard(gamestate.gameboard)
     display_board.resurface()
@@ -753,7 +753,7 @@ def run_game(gameflow):
         if (turn_submitted):
             submit_success = gameflow.try_to_advance_turn()
         if (submit_success):
-            gamestate = gameflow.most_recent_gamestate_copy()
+            gamestate = gameflow.most_recent_gamestate()
             turn_submitted = False
             working_turn = gameplay.default_turn_for(gamestate, local_player)
             local_player = gameflow.get_local_player(gamestate)
