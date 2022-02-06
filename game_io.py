@@ -123,6 +123,7 @@ def unit_prototype_from_file(team_name, unit_name):
                      size=size,
                      parts=parts,
                      owner_player_number=0,
+                     owner_team_number=0,
                      unit_name=unit_name,
                      production_cost=production_cost,
                      research_threshhold=research_threshhold)

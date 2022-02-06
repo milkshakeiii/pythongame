@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from typing import Dict, List, Tuple
 from enum import Enum
+from copy import deepcopy
 
 class ShapeTypeEnum(Enum):
     BISHOP = 1
@@ -29,6 +30,15 @@ class Placeable:
     coords: Tuple[int, int]
     size: int
 
+    def is_resource_pile(self):
+        return False
+
+    def is_wall(self):
+        return False
+
+    def is_unit(self):
+        return False
+
 @dataclass(eq=False)
 class Part():
     size: int
@@ -38,6 +48,19 @@ class Part():
     def max_hp(self):
         return int(self.size*10*self.quality)
 
+    def current_hp(self):
+        return self.max_hp() - self.damage
+
+    '''
+    return actual amount of damage taken
+    '''
+    def receive_damage(self, amount):
+        starting_hp = self.current_hp()
+        ending_hp = max(self.current_hp()-amount, 0)
+        actual_taken = starting_hp - ending_hp
+        self.damage += actual_taken
+        return actual_taken
+    
     def display_name(self):
         raise Exception("display_name called on part superclass")
 
@@ -45,6 +68,7 @@ class Part():
 class Unit(Placeable):
     parts: List[Part]
     owner_player_number: int
+    owner_team_number: int
     unit_name: str
     production_cost: int
     research_threshhold: float
@@ -65,6 +89,15 @@ class Unit(Placeable):
                 result += shape_type.move_paths(self.coords, part.size)
         return result
 
+    def receive_damage(self, amount):
+        for part in self.parts:
+            amount -= part.receive_damage(amount)
+            # part.receive_damage returns amount taken up to max, so
+            # amount will spill over until it becomes 0
+
+    def is_unit(self):
+        return True
+
 @dataclass(eq=False)
 class Player:
     player_number: int
@@ -79,6 +112,15 @@ class Player:
 @dataclass(eq=False)
 class Gameboard:
     squares: Dict[Tuple[int, int], List[Placeable]]
+
+    def get_single_occupant(self, square):
+        occupants = self.squares.get(square, [])
+        occupants = [o for o in occupants if not o.is_resource_pile()]
+        if len(occupants) == 0:
+            return None
+        if len(occupants) == 1:
+            return occupants[0]
+        raise Exception("Multiple occupants found")
 
     def add_to_board(self, placeable):
         size = placeable.size
@@ -193,14 +235,24 @@ class Queen(ShapeType):
 class ResourcePile(Placeable):
     amount: float
 
+    def is_resource_pile(self):
+        return True
+
 @dataclass(eq=False)
 class Wall(Placeable):
-    pass
+    def is_wall(self):
+        return True
 
 @dataclass(eq=False)
 class Action():
     def energy_cost(self, part):
         return NotImplemented
+
+    def is_armament(self):
+        return False
+
+    def is_producer(self):
+        return False
 
 @dataclass(eq=False)
 class Locomotor(Part):
@@ -263,6 +315,9 @@ class ArmamentAction(Action):
 
     def energy_cost(self, armament):
         return armament.energy_cost()
+
+    def is_armament(self):
+        return True
 
 @dataclass(eq=False)
 class Researcher(Part):
@@ -349,6 +404,9 @@ class ProducerAction(Action):
     def energy_cost(self, producer):
         return producer.energy_cost()
 
+    def is_producer(self):
+        return True
+
 def build_gameturn(players):
     dictionary = dict()
     for player in players:
@@ -377,7 +435,7 @@ class Gameturn:
     def __setitem__(self, key, value):
         self.players_to_units_to_parts_to_actions[key] = value
 
-    def unit_pending_true__max_gain_energy(self, player, unit):
+    def unit_pending_true_max_gain_energy(self, player, unit):
         parts = unit.parts
         max_energy = 0
         true_energy = 0
@@ -411,8 +469,49 @@ def copy_and_get_advanced_gamestate(starting_gamestate, do_turn):
 
 
 def advance_gamestate_via_mutation(gamestate, do_turn):
-    # mutate gamestate in a lot of ways
+    def do_blast():
+        shape_type = shape_enum_to_object(part.shape_type)
+        for path in shape_type.blast_paths(unit.coords, part.size, unit.size):
+            for square in path:
+                occupant = gamestate.gameboard.get_single_occupant(square)
+                if not occupant:
+                    continue
+                elif occupant.is_wall():
+                    break
+                elif occupant.is_unit():
+                    print(occupant in turn_dict[player])
+                    occupant.receive_damage(part.damage_dealt())
 
+    def do_production():
+        unit.parts[3].under_production = action.produced_unit
+        if part.next_activation_produces():
+            new_unit = deepcopy(action.produced_unit)
+            new_unit.coords = action.out_coords
+            gamestate.gameboard.add_to_board(new_unit)
+            part.current_production_points = 0
+        else:
+            part.current_production_points += part.points_per_activation()
+            
+
+    turn_dict = do_turn.players_to_units_to_parts_to_actions
+
+    # armaments
+    for player in turn_dict:
+        for unit in turn_dict[player]:
+            for part in turn_dict[player][unit]:
+                action = turn_dict[player][unit][part]
+                if action.is_armament():
+                    do_blast()
+
+    # producers
+    for player in turn_dict:
+        for unit in turn_dict[player]:
+            for part in turn_dict[player][unit]:
+                action = turn_dict[player][unit][part]
+                if action.is_producer():
+                    do_production()
+            print(unit)
+    print(gamestate)
     return gamestate
 
 

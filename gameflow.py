@@ -111,7 +111,7 @@ def test_gamestate():
     test_unit.coords = (5, 5)
     gameboard.add_to_board(test_unit)
     test_unit_2 = game_io.unit_prototype_from_file("test_team_1", "small_1")
-    test_unit_2.coords = (20, 15)
+    test_unit_2.coords = (10, 15)
     gameboard.add_to_board(test_unit_2)
     test_unit_3 = game_io.unit_prototype_from_file("test_team_1", "big_1")
     test_unit_3.coords = (5, 20)

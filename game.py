@@ -22,12 +22,15 @@ GRID_WIDTH = 30
 GRID_HEIGHT = 30
 IMAGE_DIRECTORY = "images/"
 
-
+load_whole_image_results = {}
 def load_whole_image(name):
+    if name in load_whole_image_results:
+        return load_whole_image_results[name]
     filename = os.path.join(IMAGE_DIRECTORY, name + ".png")
     full_image = pygame.image.load(filename)
     full_image.convert()
     full_image.convert_alpha()
+    load_whole_image_results[name] = full_image
     return full_image
 
 
@@ -124,12 +127,13 @@ class DisplayBoard:
         return self.highlighted_square
 
     def load_gameboard(self, gameboard):
+        self.squares = {}
         for coords, placeables in gameboard.squares.items():
             for placeable in placeables:
                 offset = (coords[0] - placeable.coords[0],
                           coords[1] - placeable.coords[1])
                 image = load_image_square(placeable.image_name, offset)
-                self.squares[coords]= self.squares.get(coords, []) + [image]
+                self.squares[coords] = self.squares.get(coords, []) + [image]
 
     '''
     Based on the submitted actions in gameturn, draw highlights of
@@ -451,7 +455,9 @@ class MouseoverWindow:
             unit_name = "None"
             part_dict = gameturn[local_player].get(self.locked, dict())
             action = part_dict.get(part, None)
+            print(part.under_production)
             if part.under_production != None:
+                print("do")
                 unit_name = part.under_production.unit_name
             if action != None:
                 unit_name = action.produced_unit.unit_name
@@ -511,7 +517,7 @@ class MouseoverWindow:
                                           False,
                                           (255, 255, 255))
         self.surface.blit(energy_text, (210, 20))
-        amount_info = gameturn.unit_pending_true__max_gain_energy(local_player,
+        amount_info = gameturn.unit_pending_true_max_gain_energy(local_player,
                                                                   unit)
         pending, true, maximum, gain = amount_info
         pending = "%6.2f" % (pending)
@@ -695,7 +701,8 @@ def run_game(gameflow):
         
         frame += 1
         clock.tick(30)
-        
+
+        display_board.load_gameboard(gamestate.gameboard)
         display_board.resurface()
         
         playzone_mouse = display.playzone_mouse(pygame.mouse.get_pos())
