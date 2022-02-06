@@ -274,26 +274,27 @@ class MouseoverWindow:
                                     self.locked,
                                     clicked_part):
                 gameturn.remove_action(local_player, self.locked, clicked_part)
-            elif type(clicked_part) == gameplay.Researcher:
+            elif clicked_part.is_researcher():
                 action = gameplay.ResearcherAction()
                 gameturn.add_action(local_player,
                                     self.locked,
                                     clicked_part,
                                     action)
-            elif type(clicked_part) == gameplay.Collector:
+            elif clicked_part.is_collector():
                 action = gameplay.CollectorAction()
                 gameturn.add_action(local_player,
                                     self.locked,
                                     clicked_part,
                                     action)
-            elif not (type(clicked_part) in [gameplay.EnergyCore,
-                                             gameplay.Armor]):
+            elif (not clicked_part.is_core()) and (not clicked_part.is_armor()):
                 self.ui_active_part = clicked_part
             return True
         ###
 
-        ### CLICKING WHILE A PART IS ACTIVE 
-        if type(self.ui_active_part) is gameplay.Armament:
+        ### CLICKING WHILE A PART IS ACTIVE
+        if self.ui_active_part is None:
+            pass
+        elif self.ui_active_part.is_armament():
             shape_type_enum = self.ui_active_part.shape_type
             shape = gameplay.shape_enum_to_object(shape_type_enum)
             index = 0
@@ -310,7 +311,7 @@ class MouseoverWindow:
                     return True
                     
                 index += 1
-        if type(self.ui_active_part) is gameplay.Locomotor:
+        elif self.ui_active_part.is_locomotor():
             shape_type_enum = self.ui_active_part.shape_type
             shape = gameplay.shape_enum_to_object(shape_type_enum)
             for path in shape.move_paths(self.locked.coords,
@@ -328,7 +329,7 @@ class MouseoverWindow:
                         self.deselect_part()
                         return True
 
-        if (type(self.ui_active_part) is gameplay.Producer and
+        elif (self.ui_active_part.is_producer() and
             (self.ui_active_part.next_activation_produces() or
              self.intermediary_production_unit != None)):
             build_unit = self.ui_active_part.under_production
@@ -346,8 +347,7 @@ class MouseoverWindow:
                                         action)
                     self.deselect_part()
                     return True
-        elif (type(self.ui_active_part) is gameplay.Producer and
-              self.ui_active_part.under_production == None and
+        elif (self.ui_active_part.is_producer() and
               research_mouseover != None):
             if (self.ui_active_part.points_per_activation() <
                 research_mouseover.production_cost):
@@ -455,9 +455,7 @@ class MouseoverWindow:
             unit_name = "None"
             part_dict = gameturn[local_player].get(self.locked, dict())
             action = part_dict.get(part, None)
-            print(part.under_production)
             if part.under_production != None:
-                print("do")
                 unit_name = part.under_production.unit_name
             if action != None:
                 unit_name = action.produced_unit.unit_name

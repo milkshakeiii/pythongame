@@ -64,6 +64,27 @@ class Part():
     def display_name(self):
         raise Exception("display_name called on part superclass")
 
+    def is_collector(self):
+        return False
+
+    def is_researcher(self):
+        return False
+
+    def is_producer(self):
+        return False
+
+    def is_armament(self):
+        return False
+
+    def is_locomotor(self):
+        return False
+
+    def is_core(self):
+        return False
+
+    def is_armor(self):
+        return False
+
 @dataclass(eq=False)
 class Unit(Placeable):
     parts: List[Part]
@@ -267,6 +288,9 @@ class Locomotor(Part):
     def display_name(self):
         return "Locomotor"
 
+    def is_locomotor(self):
+        return True
+
 @dataclass(eq=False)
 class LocomotorAction(Action):
     move_target: Tuple[int, int] # in relative spaces
@@ -309,6 +333,9 @@ class Armament(Part):
     def display_name(self):
         return "Armament"
 
+    def is_armament(self):
+        return True
+
 @dataclass(eq=False)
 class ArmamentAction(Action):
     blast_index: int
@@ -330,6 +357,9 @@ class Researcher(Part):
     def display_name(self):
         return "Researcher"
 
+    def is_researcher(self):
+        return True
+
 @dataclass(eq=False)
 class ResearcherAction(Action):
     def energy_cost(self, researcher):
@@ -348,10 +378,16 @@ class EnergyCore(Part):
     def display_name(self):
         return "Core"
 
+    def is_core(self):
+        return True
+
 @dataclass(eq=False)
 class Armor(Part):
     def display_name(self):
         return "Armor"
+
+    def is_armor(self):
+        return True
 
 @dataclass(eq=False)
 class Producer(Part):
@@ -395,6 +431,9 @@ class Producer(Part):
 
     def display_name(self):
         return "Producer"
+
+    def is_producer(self):
+        return True
 
 @dataclass(eq=False)
 class ProducerAction(Action):
@@ -472,16 +511,16 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
                 elif occupant.is_wall():
                     break
                 elif occupant.is_unit():
-                    print(occupant in turn_dict[player])
                     occupant.receive_damage(part.damage_dealt())
 
     def do_production():
-        unit.parts[3].under_production = action.produced_unit
+        part.under_production = action.produced_unit
         if part.next_activation_produces():
             new_unit = deepcopy(action.produced_unit)
             new_unit.coords = action.out_coords
             gamestate.gameboard.add_to_board(new_unit)
             part.current_production_points = 0
+            part.under_production = None
         else:
             part.current_production_points += part.points_per_activation()
             
@@ -503,8 +542,7 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
                 action = turn_dict[player][unit][part]
                 if action.is_producer():
                     do_production()
-            print(unit)
-    print(gamestate)
+            
     return gamestate
 
 
