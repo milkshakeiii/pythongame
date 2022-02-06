@@ -333,7 +333,7 @@ class MouseoverWindow:
             (self.ui_active_part.next_activation_produces() or
              self.intermediary_production_unit != None)):
             build_unit = self.ui_active_part.under_production
-            if build_unit == None:
+            if self.intermediary_production_unit != None:
                 build_unit = self.intermediary_production_unit
             for coord in self.ui_active_part.spawn_coords(self.locked.coords,
                                                           self.locked.size,
@@ -452,21 +452,27 @@ class MouseoverWindow:
         if (self.legitimate_part_index(clicked_part_index, mouse_pos)):
             part = self.locked.parts[clicked_part_index]
         if type(part) == gameplay.Producer:
-            unit_name = "None"
             part_dict = gameturn[local_player].get(self.locked, dict())
             action = part_dict.get(part, None)
+
+            displayed_unit = None
             if part.under_production != None:
-                unit_name = part.under_production.unit_name
+                displayed_unit = part.under_production
             if action != None:
-                unit_name = action.produced_unit.unit_name
+                displayed_unit = action.produced_unit
+            if self.intermediary_production_unit != None:
+                displayed_unit = self.intermediary_production_unit
+
             this_turn_addition = 0
             if action != None:
                 this_turn_addition = part.points_per_activation()
+
             points_to_produce = "-"
-            if part.under_production != None:
-                points_to_produce = part.points_to_produce()
-            if action != None:
-                points_to_produce = action.produced_unit.production_cost
+            unit_name = "None"
+            if displayed_unit != None:
+                points_to_produce = displayed_unit.production_cost
+                unit_name = displayed_unit.unit_name
+            
             progress = (str(part.current_production_points) +
                         "+" + str(this_turn_addition)+ '/' +
                         str(points_to_produce))
