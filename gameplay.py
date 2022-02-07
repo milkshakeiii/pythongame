@@ -287,6 +287,9 @@ class Action():
     def is_producer(self):
         return False
 
+    def is_researcher(self):
+        return False
+
 @dataclass(eq=False)
 class Locomotor(Part):
     shape_type: ShapeTypeEnum
@@ -377,6 +380,9 @@ class ResearcherAction(Action):
     def energy_cost(self, researcher):
         return researcher.energy_cost()
 
+    def is_researcher(self):
+        return True
+
 @dataclass(eq=False)
 class EnergyCore(Part):
     current_energy: float
@@ -402,6 +408,12 @@ class EnergyCore(Part):
         actual_paid = starting_energy - ending_energy
         self.current_energy -= actual_paid
         return actual_paid
+
+    def charge(self):
+        self.current_energy += self.energy_recharge_per_turn()
+
+    def leak(self):
+        self.current_energy = min(self.maximum_energy(), self.current_energy)
 
 @dataclass(eq=False)
 class Armor(Part):
@@ -500,11 +512,12 @@ class Gameturn:
         parts = unit.parts
         max_energy = 0
         true_energy = 0
+        gain_energy = 0
         for part in parts:
             if type(part) == EnergyCore:
-                max_energy = part.maximum_energy()
-                true_energy = part.current_energy
-                gain_energy = part.energy_recharge_per_turn()
+                max_energy += part.maximum_energy()
+                true_energy += part.current_energy
+                gain_energy += part.energy_recharge_per_turn()
 
         pending_energy = true_energy
         for part, action in self[player].get(unit, dict()).items():
@@ -551,6 +564,17 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
 
     turn_dict = do_turn.players_to_units_to_parts_to_actions
 
+    # energy gain
+    charged_parts = set()
+    for placeables in gamestate.gameboard.squares.values():
+        for placeable in placeables:
+            if placeable.is_unit():
+                for part in placeable.parts:
+                    if part.is_core():
+                        if part not in charged_parts:
+                            part.charge()
+                            charged_parts.add(part)
+
     # research
     for player in turn_dict:
         for unit in turn_dict[player]:
@@ -574,5 +598,13 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
                 action = turn_dict[player][unit][part]
                 if action.is_producer() and unit.pay_energy(part, action):
                     do_production()
+
+    # energy leak
+    for placeables in gamestate.gameboard.squares.values():
+        for placeable in placeables:
+            if placeable.is_unit():
+                for part in placeable.parts:
+                    if part.is_core():
+                        part.leak()                    
 
     return gamestate

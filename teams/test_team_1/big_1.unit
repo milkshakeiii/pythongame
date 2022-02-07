@@ -11,7 +11,7 @@ part: locomotor
 	part_shape: queen
 part: core
 	part_size: 8
-	part_quality: 0.5 
+	part_quality: 1 
 part: armament
 	part_size: 9
 	part_quality: 0.7
