@@ -669,6 +669,9 @@ class ResearchWindow:
                                               (255, 255, 255))
         self.surface.blit(percentage_text, (230, 10))
 
+        resource_background = pygame.Surface((50, 30))
+        resource_background.fill((30, 60, 30))
+        self.surface.blit(resource_background, (105, 255))
         resource_text = DEFAULT_FONT.render(str(player.resource_amount),
                                             False,
                                             (255, 255, 255))

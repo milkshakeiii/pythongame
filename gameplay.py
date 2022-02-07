@@ -136,7 +136,7 @@ class Player:
     player_number: int
     team_number: int
     unit_prototypes: List[Unit]
-    resource_amount: int
+    resource_amount: float
     research_amount: int
 
     def research_fraction(self):
@@ -266,10 +266,18 @@ class Queen(ShapeType):
     
 @dataclass(eq=False)
 class ResourcePile(Placeable):
-    amount: float
+    amount: int
 
     def is_resource_pile(self):
         return True
+
+    '''
+    return actual amount yielded
+    '''
+    def yield_resources(self, amount_to_yield) -> int:
+        yielded = min(self.amount, amount_to_yield)
+        self.amount -= yielded
+        return yielded
 
 @dataclass(eq=False)
 class Wall(Placeable):
@@ -288,6 +296,9 @@ class Action():
         return False
 
     def is_researcher(self):
+        return False
+
+    def is_collector(self):
         return False
 
 @dataclass(eq=False)
@@ -315,10 +326,10 @@ class LocomotorAction(Action):
 
 @dataclass(eq=False)
 class Collector(Part):
-    def max_resources_removed_per_turn(self):
+    def max_resources_removed_per_turn(self) -> int:
         return self.size
 
-    def resources_gained_per_resources_removed(self):
+    def resources_gained_per_resources_removed(self) -> float:
         return self.quality
 
     def energy_cost(self):
@@ -327,10 +338,16 @@ class Collector(Part):
     def display_name(self):
         return "Collector"
 
+    def is_collector(self):
+        return True
+
 @dataclass(eq=False)
 class CollectorAction(Action):
     def energy_cost(self, collector):
         return collector.energy_cost()
+
+    def is_collector(self):
+        return True
         
 @dataclass(eq=False)
 class Armament(Part):
@@ -561,7 +578,25 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
 
     def do_research():
         player.research_amount += part.research_amount()
-        print(player.research_amount)
+
+    def do_collection():
+        resource_piles = []
+        covered_coords = []
+        for i in range(unit.size):
+            for j in range(unit.size):
+                covered_coords.append((unit.coords[0]+i,
+                                       unit.coords[1]+j))
+        gatherable = part.max_resources_removed_per_turn()
+        for coord in covered_coords:
+            placeables = gamestate.gameboard.squares[coord]
+            for placeable in placeables:
+                if placeable.is_resource_pile():
+                    gatherable -= placeable.yield_resources(gatherable)
+        gathered = part.max_resources_removed_per_turn() - gatherable
+        ratio = part.resources_gained_per_resources_removed()
+        player.resource_amount += gathered * ratio
+                
+        
 
     turn_dict = do_turn.players_to_units_to_parts_to_actions
 
@@ -585,6 +620,12 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
                     do_research()
 
     # collectors
+    for player in turn_dict:
+        for unit in turn_dict[player]:
+            for part in turn_dict[player][unit]:
+                action = turn_dict[player][unit][part]
+                if action.is_collector() and unit.pay_energy(part, action):
+                    do_collection()
 
     # armaments
     for player in turn_dict:
@@ -603,11 +644,7 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
                     do_production()
 
     # energy leak
-    for placeables in gamestate.gameboard.squares.values():
-        for placeable in placeables:
-            if placeable.is_unit():
-                for part in placeable.parts:
-                    if part.is_core():
-                        part.leak()                    
+    for part in charged_parts:
+        part.leak()                    
 
     return gamestate
