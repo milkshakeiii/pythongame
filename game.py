@@ -8,7 +8,9 @@ import game_io
 import gameplay
 import gameflow
 
-ctypes.windll.user32.SetProcessDPIAware()
+from sys import platform
+if platform == "win32":
+    ctypes.windll.user32.SetProcessDPIAware()
 
 
 pygame.font.init()

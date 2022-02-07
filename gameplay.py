@@ -116,6 +116,18 @@ class Unit(Placeable):
             # part.receive_damage returns amount taken up to max, so
             # amount will spill over until it becomes 0
 
+    '''
+    returns True iff the cost was successfully paid
+    '''
+    def pay_energy(self, part, action):
+        amount_to_pay = action.energy_cost(part)
+        
+        for part in self.parts:
+            if part.is_core():
+                amount_to_pay -= part.pay_energy(amount_to_pay)
+
+        return amount_to_pay == 0
+
     def is_unit(self):
         return True
 
@@ -381,6 +393,16 @@ class EnergyCore(Part):
     def is_core(self):
         return True
 
+    '''
+    pay up to maximum, return actual amount of energy paid
+    '''
+    def pay_energy(self, amount):
+        starting_energy = self.current_energy
+        ending_energy = max(self.current_energy-amount, 0)
+        actual_paid = starting_energy - ending_energy
+        self.current_energy -= actual_paid
+        return actual_paid
+
 @dataclass(eq=False)
 class Armor(Part):
     def display_name(self):
@@ -523,16 +545,26 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
             part.under_production = None
         else:
             part.current_production_points += part.points_per_activation()
-            
+
+    def do_research():
+        pass
 
     turn_dict = do_turn.players_to_units_to_parts_to_actions
+
+    # research
+    for player in turn_dict:
+        for unit in turn_dict[player]:
+            for part in turn_dict[player][unit]:
+                action = turn_dict[player][unit][part]
+                if action.is_researcher() and unit.pay_energy(part, action):
+                    do_research()
 
     # armaments
     for player in turn_dict:
         for unit in turn_dict[player]:
             for part in turn_dict[player][unit]:
                 action = turn_dict[player][unit][part]
-                if action.is_armament():
+                if action.is_armament() and unit.pay_energy(part, action):
                     do_blast()
 
     # producers
@@ -540,15 +572,7 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
         for unit in turn_dict[player]:
             for part in turn_dict[player][unit]:
                 action = turn_dict[player][unit][part]
-                if action.is_producer():
+                if action.is_producer() and unit.pay_energy(part, action):
                     do_production()
-            
+
     return gamestate
-
-
-
-
-
-
-
-        
