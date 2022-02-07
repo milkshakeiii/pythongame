@@ -560,7 +560,8 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
             part.current_production_points += part.points_per_activation()
 
     def do_research():
-        pass
+        player.research_amount += part.research_amount()
+        print(player.research_amount)
 
     turn_dict = do_turn.players_to_units_to_parts_to_actions
 
@@ -575,13 +576,15 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
                             part.charge()
                             charged_parts.add(part)
 
-    # research
+    # researchers
     for player in turn_dict:
         for unit in turn_dict[player]:
             for part in turn_dict[player][unit]:
                 action = turn_dict[player][unit][part]
                 if action.is_researcher() and unit.pay_energy(part, action):
                     do_research()
+
+    # collectors
 
     # armaments
     for player in turn_dict:

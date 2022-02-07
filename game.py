@@ -659,7 +659,10 @@ class ResearchWindow:
 
     def draw_player_info(self, player):
         self.displayed_player = player
-        
+
+        percentage_background = pygame.Surface((80, 30))
+        percentage_background.fill((30, 60, 30))
+        self.surface.blit(percentage_background, (230, 10))
         percentage_string = "{0:.1%}".format(player.research_fraction())
         percentage_text = DEFAULT_FONT.render(percentage_string,
                                               False,
@@ -764,6 +767,7 @@ def run_game(gameflow):
             working_turn = gameplay.default_turn_for(gamestate, local_player)
             local_player = gameflow.get_local_player(gamestate)
             turn_number = str(len(gameflow.gamestates))
+            research_window.draw_player_info(local_player)
             research_window.draw_button_text("Submit turn " + turn_number,
                                              (50, 70, 50))
             print("Turn " + turn_number)
