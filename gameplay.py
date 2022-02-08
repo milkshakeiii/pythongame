@@ -438,9 +438,8 @@ class EnergyCore(Part):
     pay up to maximum, return actual amount of energy paid
     '''
     def pay_energy(self, amount):
-        starting_energy = self.current_energy
-        ending_energy = max(self.current_energy-amount, 0)
-        actual_paid = starting_energy - ending_energy
+        current = self.current_energy
+        actual_paid = current if current < amount else amount
         self.current_energy -= actual_paid
         return actual_paid
 
@@ -610,6 +609,8 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
             for placeable in placeables:
                 if placeable.is_resource_pile():
                     gatherable -= placeable.yield_resources(gatherable)
+                    if placeable.amount == 0:
+                        gamestate.gameboard.remove_from_board(placeable)
         gathered = part.max_resources_removed_per_turn() - gatherable
         ratio = part.resources_gained_per_resources_removed()
         player.resource_amount += gathered * ratio
@@ -680,7 +681,7 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
             if placeable.is_unit():
                 start_squares[placeable] = placeable.coords
                 if placeable not in moving_units:
-                    stationary_units.add(unit)
+                    stationary_units.add(placeable)
                     blocked_squares.add(coords)
                     continue
             if placeable.is_wall():
@@ -708,7 +709,7 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
             if len(units) <= 1:
                 continue
             highest_priority = max(units,
-                                   key=lambda unit: (unit not in stationary_units,
+                                   key=lambda unit: (unit in stationary_units,
                                                      unit.movement_priority()))
             units.remove(highest_priority) # the highest priority unit can stay
             for unit in units:
