@@ -666,27 +666,25 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
     blocked_squares = set()
     stationary_units = set()
     moving_units = set()
-    #fill stationary_units and moving_units
+    #fill moving_units
     for player in turn_dict: 
         for unit in turn_dict[player]:
             for part in turn_dict[player][unit]:
                 action = turn_dict[player][unit][part]
                 if action.is_locomotor() and unit.pay_energy(part, action):
                     moving_units.add(unit)
-            if unit not in moving_units:
-                stationary_units.add(unit)
 
-    #fill blocked_squares and start_squares
+    #fill blocked_squares and start_squares and stationary_units
     for coords, placeables in gamestate.gameboard.squares.items():
         for placeable in placeables:
             if placeable.is_unit():
-                start_squares[unit] = unit.coords
-                if unit in stationary_units:
+                start_squares[placeable] = placeable.coords
+                if placeable not in moving_units:
+                    stationary_units.add(unit)
                     blocked_squares.add(coords)
                     continue
             if placeable.is_wall():
                 blocked_squares.add(coords)
-    print(start_squares) # TODO why is this missing some units?
 
     def path_clear():
         return True # TODO
@@ -710,7 +708,7 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
             if len(units) <= 1:
                 continue
             highest_priority = max(units,
-                                   key=lambda unit: (unit in stationary_units,
+                                   key=lambda unit: (unit not in stationary_units,
                                                      unit.movement_priority()))
             units.remove(highest_priority) # the highest priority unit can stay
             for unit in units:
@@ -727,3 +725,4 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
         part.leak()                    
 
     return gamestate
+
