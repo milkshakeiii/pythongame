@@ -131,6 +131,11 @@ class Unit(Placeable):
     def is_unit(self):
         return True
 
+    def movement_priorty(self):
+        return (self.size,
+                sum([part.size for part in self.parts]),
+                owner_player_number)
+
 @dataclass(eq=False)
 class Player:
     player_number: int
@@ -642,6 +647,47 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
                 action = turn_dict[player][unit][part]
                 if action.is_producer() and unit.pay_energy(part, action):
                     do_production()
+
+    # movement
+    blocked_squares = set()
+    stationary_units = set()
+    moving_units = set()
+                            
+    for player in turn_dict:
+        for unit in turn_dict[player]:
+            for part in turn_dict[player][unit]:
+                action = turn_dict[player][unit][part]
+                if action.is_locomotor() and unit.pay_energy(part, action):
+                    moving_units.add(unit)
+            if unit not in moving_units:
+                stationary_units.add(unit)
+
+    for coords, placeables in gamestate.gameboard.squares:
+        for placeable in placeables:
+            if placeable.is_unit():
+                if unit in stationary_units:
+                    blocked_squares.add(coords)
+                    continue
+            if placeable.is_wall():
+                blocked_squares.add(coords)
+
+    for player in turn_dict:
+        for unit in turn_dict[player]:
+            for part in turn_dict[player][unit]:
+                action = turn_dict[player][unit][part]
+                if action.is_locomotor() and unit in moving_units:
+                    if path_clear():
+                        gamestate.gameboard.remove_from_board(unit)
+                        unit.coords = action.move_target
+                        gamestate.gameboard.add_to_board(unit)
+
+    for coords, placeables in gamestate.gameboard.squares:
+        units = [placeable for placeable in placeables if placeable.is_unit()]
+        if len(units) > 1:
+            freeze_me = min(units, key=Unit.movement_priority)
+                        
+                    
+    
 
     # energy leak
     for part in charged_parts:
