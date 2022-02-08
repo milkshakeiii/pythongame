@@ -131,10 +131,10 @@ class Unit(Placeable):
     def is_unit(self):
         return True
 
-    def movement_priorty(self):
+    def movement_priority(self):
         return (self.size,
                 sum([part.size for part in self.parts]),
-                owner_player_number)
+                self.owner_player_number)
 
 @dataclass(eq=False)
 class Player:
@@ -175,6 +175,13 @@ class Gameboard:
                 if not (placeable in self.squares[coords]):
                     raise Exception("Expected placeable not found at " + coords)
                 self.squares[coords].remove(placeable)
+
+    def conflicts_exist(self):
+        for placeables in self.squares.values():
+            units = [p for p in placeables if p.is_unit()]
+            if len(units) > 1:
+                return True
+        return False
 
 def unit_placement_in_bounds(coord, unit_size):
     return (in_bounds(coord)
@@ -306,6 +313,9 @@ class Action():
     def is_collector(self):
         return False
 
+    def is_locomotor(self):
+        return False
+
 @dataclass(eq=False)
 class Locomotor(Part):
     shape_type: ShapeTypeEnum
@@ -328,6 +338,9 @@ class LocomotorAction(Action):
 
     def energy_cost(self, locomotor):
         return max(abs(self.move_target[0]), abs(self.move_target[1]))
+
+    def is_locomotor(self):
+        return True
 
 @dataclass(eq=False)
 class Collector(Part):
@@ -648,12 +661,13 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
                 if action.is_producer() and unit.pay_energy(part, action):
                     do_production()
 
-    # movement
+    ### movement ###
+    start_squares = {}
     blocked_squares = set()
     stationary_units = set()
     moving_units = set()
-                            
-    for player in turn_dict:
+    #fill stationary_units and moving_units
+    for player in turn_dict: 
         for unit in turn_dict[player]:
             for part in turn_dict[player][unit]:
                 action = turn_dict[player][unit][part]
@@ -662,15 +676,22 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
             if unit not in moving_units:
                 stationary_units.add(unit)
 
-    for coords, placeables in gamestate.gameboard.squares:
+    #fill blocked_squares and start_squares
+    for coords, placeables in gamestate.gameboard.squares.items():
         for placeable in placeables:
             if placeable.is_unit():
+                start_squares[unit] = unit.coords
                 if unit in stationary_units:
                     blocked_squares.add(coords)
                     continue
             if placeable.is_wall():
                 blocked_squares.add(coords)
+    print(start_squares) # TODO why is this missing some units?
 
+    def path_clear():
+        return True # TODO
+
+    #move all units to their destination if not blocked
     for player in turn_dict:
         for unit in turn_dict[player]:
             for part in turn_dict[player][unit]:
@@ -678,17 +699,29 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
                 if action.is_locomotor() and unit in moving_units:
                     if path_clear():
                         gamestate.gameboard.remove_from_board(unit)
-                        unit.coords = action.move_target
+                        unit.coords = (unit.coords[0] + action.move_target[0],
+                                       unit.coords[1] + action.move_target[1])
                         gamestate.gameboard.add_to_board(unit)
 
-    for coords, placeables in gamestate.gameboard.squares:
-        units = [placeable for placeable in placeables if placeable.is_unit()]
-        if len(units) > 1:
-            freeze_me = min(units, key=Unit.movement_priority)
-                        
-                    
-    
-
+    while gamestate.gameboard.conflicts_exist():
+        #while overlap exists, unmove everyone but the highest priority unit
+        for coords, placeables in gamestate.gameboard.squares.items():
+            units = [p for p in placeables if p.is_unit()]
+            if len(units) <= 1:
+                continue
+            highest_priority = max(units,
+                                   key=lambda unit: (unit in stationary_units,
+                                                     unit.movement_priority()))
+            units.remove(highest_priority) # the highest priority unit can stay
+            for unit in units:
+                # others' movements fail
+                gamestate.gameboard.remove_from_board(unit)
+                unit.coords = start_squares[unit]
+                gamestate.gameboard.add_to_board(unit)
+                moving_units.remove(unit)
+                stationary_units.add(unit)
+    ### end movement ###
+                
     # energy leak
     for part in charged_parts:
         part.leak()                    
