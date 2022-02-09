@@ -73,17 +73,15 @@ class Gameflow:
     '''
     return True iff the turn has been successfully advanced
     '''
-    def try_to_advance_turn(self):
+    def try_to_advance_turn(self, gamestate):
         turnsources_ready = [turnsource.turn_ready() for
                              turnsource in self.turnsources]
         ready = all(turnsources_ready)
         if ready:
             turns = [turnsource.get_turn() for turnsource in self.turnsources]
             merged_turn = gameplay.merge_turns(turns)
-            old_gamestate = self.most_recent_gamestate()
-            new_gamestate = gameplay.advance_gamestate_via_mutation(
-                old_gamestate, merged_turn)
-            self.gamestates.append(copy.deepcopy(new_gamestate))
+            gameplay.advance_gamestate_via_mutation(gamestate, merged_turn)
+            self.gamestates.append(copy.deepcopy(gamestate))
             return True
         return False
 
@@ -104,6 +102,8 @@ def test_gamestate():
     test_resource = game_io.resource_pile_factory((6,6), 50)
     gameboard.add_to_board(test_resource)
     test_resource = game_io.resource_pile_factory((6,7), 4)
+    gameboard.add_to_board(test_resource)
+    test_resource = game_io.resource_pile_factory((12,7), 100)
     gameboard.add_to_board(test_resource)
     test_unit = game_io.unit_prototype_from_file("test_team_1", "mothership_1")
     test_unit.coords = (5, 5)

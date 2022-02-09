@@ -703,7 +703,7 @@ def run_game(gameflow):
 
     local_player = gameflow.get_local_player(gamestate)
     research_window.draw_player_info(local_player)
-    working_turn = gameplay.default_turn_for(gamestate, local_player)
+    working_turn = gameplay.build_gameturn(gamestate.players)
 
     turn_submitted = False
     frame = 0
@@ -763,12 +763,12 @@ def run_game(gameflow):
 
         submit_success = False
         if (turn_submitted):
-            submit_success = gameflow.try_to_advance_turn()
+            submit_success = gameflow.try_to_advance_turn(gamestate)
         if (submit_success):
-            gamestate = gameflow.most_recent_gamestate()
             turn_submitted = False
-            working_turn = gameplay.default_turn_for(gamestate, local_player)
-            local_player = gameflow.get_local_player(gamestate)
+            working_turn = gameplay.default_turn_for(gamestate,
+                                                     local_player,
+                                                     working_turn)
             turn_number = str(len(gameflow.gamestates))
             research_window.draw_player_info(local_player)
             research_window.draw_button_text("Submit turn " + turn_number,

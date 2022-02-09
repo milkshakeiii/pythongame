@@ -578,8 +578,18 @@ def merge_turns(turns):
             merged_turn[player] = turn[player]
     return merged_turn
 
-def default_turn_for(gamestate, player):
-    return build_gameturn(gamestate.players) # TODO
+def default_turn_for(gamestate, player, working_turn):
+    default_turn = build_gameturn(gamestate.players)
+    for unit in working_turn[player]:
+        for part in working_turn[player][unit]:
+            action = working_turn[player][unit][part]
+            if action.is_researcher():
+                action = ResearcherAction()
+                default_turn.add_action(player, unit, part, action)
+            if action.is_collector():
+                action = CollectorAction()
+                default_turn.add_action(player, unit, part, action)
+    return default_turn
 
 def advance_gamestate_via_mutation(gamestate, do_turn):
     def do_blast():
@@ -708,7 +718,7 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
     def path_clear():
         return True # TODO
 
-    #move all units to their destination if not blocked
+    # move all units to their destination if not blocked
     for player in turn_dict:
         for unit in turn_dict[player]:
             for part in turn_dict[player][unit]:
@@ -721,7 +731,7 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
                         gamestate.gameboard.add_to_board(unit)
 
     while gamestate.gameboard.conflicts_exist():
-        #while overlap exists, unmove everyone but the highest priority unit
+        # while overlap exists, unmove everyone but the highest priority unit
         for coords, placeables in gamestate.gameboard.squares.items():
             units = [p for p in placeables if p.is_unit()]
             if len(units) <= 1:
@@ -738,10 +748,10 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
                 moving_units.remove(unit)
                 stationary_units.add(unit)
     ### end movement ###
-                
+
     # energy leak
     for part in charged_parts:
-        part.leak()                    
+        part.leak()
 
     return gamestate
 
