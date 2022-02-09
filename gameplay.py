@@ -97,6 +97,15 @@ class Unit(Placeable):
     production_cost: int
     research_threshhold: float
 
+    def summed_hp(self):
+        result = 0
+        for part in self.parts:
+            result += part.max_hp() - part.damage
+        return result
+
+    def is_destroyed(self):
+        return self.summed_hp() == 0
+
     def moveable_squares(self):
         result = []
         for part in parts:
@@ -733,6 +742,16 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
                     part.is_functional() and
                     unit.try_pay_energy(part, action)):
                     do_production()
+
+    # removal of destroyed units
+    for placeables in gamestate.gameboard.squares.values():
+        for placeable in placeables:
+            if placeable.is_unit():
+                if placeable.is_destroyed():
+                    gamestate.gameboard.remove_from_board(placeable)
+                    for player in turn_dict:
+                        if placeable in turn_dict[player]:
+                            del turn_dict[player][placeable]
 
     ### movement ###
     start_squares = {}
