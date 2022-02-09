@@ -147,6 +147,15 @@ class Player:
     def research_fraction(self):
         return 1-(199/200)**self.research_amount
 
+    '''
+    returns True iff the cost is successfully paid
+    '''
+    def pay_for_unit(self, unit):
+        if self.resource_amount >= unit.production_cost:
+            self.resource_amount -= unit.production_cost
+            return True
+        return False
+
 @dataclass(eq=False)
 class Gameboard:
     squares: Dict[Tuple[int, int], List[Placeable]]
@@ -583,6 +592,10 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
                     occupant.receive_damage(part.damage_dealt())
 
     def do_production():
+        if part.under_production != action.produced_unit:
+            if not player.pay_for_unit(action.produced_unit):
+                return
+            
         part.under_production = action.produced_unit
         if part.next_activation_produces():
             new_unit = deepcopy(action.produced_unit)
