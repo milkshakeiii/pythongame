@@ -51,6 +51,9 @@ class Part():
     def current_hp(self):
         return self.max_hp() - self.damage
 
+    def is_functional(self):
+        return self.current_hp() > 0
+
     '''
     return actual amount of damage taken
     '''
@@ -686,7 +689,7 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
         for placeable in placeables:
             if placeable.is_unit():
                 for part in placeable.parts:
-                    if part.is_core():
+                    if part.is_core() and part.is_functional():
                         if part not in charged_parts:
                             part.charge()
                             charged_parts.add(part)
@@ -696,7 +699,9 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
         for unit in turn_dict[player]:
             for part in turn_dict[player][unit]:
                 action = turn_dict[player][unit][part]
-                if action.is_researcher() and unit.try_pay_energy(part, action):
+                if (action.is_researcher() and
+                    part.is_functional() and
+                    unit.try_pay_energy(part, action)):
                     do_research()
 
     # collectors
@@ -704,7 +709,9 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
         for unit in turn_dict[player]:
             for part in turn_dict[player][unit]:
                 action = turn_dict[player][unit][part]
-                if action.is_collector() and unit.try_pay_energy(part, action):
+                if (action.is_collector() and
+                    part.is_functional() and
+                    unit.try_pay_energy(part, action)):
                     do_collection()
 
     # armaments
@@ -712,7 +719,9 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
         for unit in turn_dict[player]:
             for part in turn_dict[player][unit]:
                 action = turn_dict[player][unit][part]
-                if action.is_armament() and unit.try_pay_energy(part, action):
+                if (action.is_armament() and
+                    part.is_functional() and
+                    unit.try_pay_energy(part, action)):
                     do_blast()
 
     # producers
@@ -720,7 +729,9 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
         for unit in turn_dict[player]:
             for part in turn_dict[player][unit]:
                 action = turn_dict[player][unit][part]
-                if action.is_producer() and unit.try_pay_energy(part, action):
+                if (action.is_producer() and
+                    part.is_functional() and
+                    unit.try_pay_energy(part, action)):
                     do_production()
 
     ### movement ###
@@ -733,7 +744,9 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
         for unit in turn_dict[player]:
             for part in turn_dict[player][unit]:
                 action = turn_dict[player][unit][part]
-                if action.is_locomotor() and unit.try_pay_energy(part, action):
+                if (action.is_locomotor() and
+                    part.is_functional() and
+                    unit.try_pay_energy(part, action)):
                     moving_units.add(unit)
 
     #fill blocked_squares and start_squares and stationary_units

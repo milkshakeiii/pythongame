@@ -272,7 +272,9 @@ class MouseoverWindow:
         clicked_part_index = self.mouse_to_part_index(mouse_pos)
         if (self.legitimate_part_index(clicked_part_index, mouse_pos)):
             clicked_part = self.locked.parts[clicked_part_index]
-            if gameturn.part_active(local_player,
+            if not clicked_part.is_functional():
+                pass
+            elif gameturn.part_active(local_player,
                                     self.locked,
                                     clicked_part):
                 gameturn.remove_action(local_player, self.locked, clicked_part)
@@ -488,7 +490,9 @@ class MouseoverWindow:
         y=self.part_zone_offset
         for part in parts:
             color = (255, 255, 255)
-            if part == self.ui_active_part:
+            if not part.is_functional():
+                color = (100, 100, 100)
+            elif part == self.ui_active_part:
                 color = (255, 255, 0)
             elif part in activated_parts:
                 color = (0, 255, 0)
