@@ -156,6 +156,9 @@ class Player:
             return True
         return False
 
+    def unit_unlocked(self, unit):
+        return self.research_fraction() >= unit.research_threshhold
+
 @dataclass(eq=False)
 class Gameboard:
     squares: Dict[Tuple[int, int], List[Placeable]]
@@ -593,6 +596,8 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
 
     def do_production():
         if part.under_production != action.produced_unit:
+            if not player.unit_unlocked(action.produced_unit):
+                return
             if not player.pay_for_unit(action.produced_unit):
                 return
             
