@@ -493,6 +493,11 @@ class Producer(Part):
         next_amount = current_amount + self.points_per_activation()
         return next_amount >= self.points_to_produce()
 
+    def action_produces(self, action):
+        current_amount = self.current_production_points
+        next_amount = current_amount + self.points_per_activation()
+        return next_amount >= action.produced_unit.production_cost
+
     def spawn_coords(self, spawner_coords, spawner_size, spawnee_size):
         spawn_spots = set()
         for y in [spawner_coords[1]-spawnee_size,
@@ -584,11 +589,17 @@ def default_turn_for(gamestate, player, working_turn):
         for part in working_turn[player][unit]:
             action = working_turn[player][unit][part]
             if action.is_researcher():
-                action = ResearcherAction()
-                default_turn.add_action(player, unit, part, action)
-            if action.is_collector():
-                action = CollectorAction()
-                default_turn.add_action(player, unit, part, action)
+                new_action = ResearcherAction()
+                default_turn.add_action(player, unit, part, new_action)
+            elif action.is_collector():
+                new_action = CollectorAction()
+                default_turn.add_action(player, unit, part, new_action)
+            elif (action.is_producer() and
+                  part.under_production == action.produced_unit):
+                new_action = ProducerAction(
+                    produced_unit=action.produced_unit,
+                    out_coords=action.out_coords)
+                default_turn.add_action(player, unit, part, new_action)
     return default_turn
 
 def advance_gamestate_via_mutation(gamestate, do_turn):

@@ -127,7 +127,7 @@ def test_gamestate():
     test_player = gameplay.Player(player_number=0,
                                   team_number=0,
                                   unit_prototypes=test_army,
-                                  resource_amount=20,
-                                  research_amount=0)
+                                  resource_amount=100,
+                                  research_amount=1000)
 
     return gameplay.Gamestate(gameboard=gameboard, players=[test_player])

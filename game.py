@@ -332,8 +332,7 @@ class MouseoverWindow:
                         return True
 
         elif (self.ui_active_part.is_producer() and
-            (self.ui_active_part.next_activation_produces() or
-             self.intermediary_production_unit != None)):
+              self.intermediary_production_unit != None):
             build_unit = self.ui_active_part.under_production
             if self.intermediary_production_unit != None:
                 build_unit = self.intermediary_production_unit
@@ -351,17 +350,7 @@ class MouseoverWindow:
                     return True
         elif (self.ui_active_part.is_producer() and
               research_mouseover != None):
-            if (self.ui_active_part.points_per_activation() <
-                research_mouseover.production_cost):
-                act = gameplay.ProducerAction(produced_unit=research_mouseover,
-                                                 out_coords=None)
-                gameturn.add_action(local_player,
-                                    self.locked,
-                                    self.ui_active_part,
-                                    act)
-                self.deselect_part()
-            else:
-                self.intermediary_production_unit = research_mouseover
+            self.intermediary_production_unit = research_mouseover
             return True
         ###
         
