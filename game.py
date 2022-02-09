@@ -350,7 +350,12 @@ class MouseoverWindow:
                     return True
         elif (self.ui_active_part.is_producer() and
               research_mouseover != None):
-            self.intermediary_production_unit = research_mouseover
+            if gameplay.unit_production_legal(self.locked,
+                                              research_mouseover,
+                                              local_player):
+                self.intermediary_production_unit = research_mouseover
+            else:
+                self.deselect_part()
             return True
         ###
         

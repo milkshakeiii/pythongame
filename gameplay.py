@@ -128,6 +128,20 @@ class Unit(Placeable):
 
         return amount_to_pay == 0
 
+    def try_pay_energy(self, part, action):
+        amount_to_pay = action.energy_cost(part)
+
+        amount_available = 0
+        for core in self.parts:
+            if core.is_core():
+                amount_available += core.current_energy
+
+        if (amount_available >= amount_to_pay):
+            self.pay_energy(part, action)
+            return True
+        return False
+        
+
     def is_unit(self):
         return True
 
@@ -602,6 +616,14 @@ def default_turn_for(gamestate, player, working_turn):
                 default_turn.add_action(player, unit, part, new_action)
     return default_turn
 
+def unit_production_legal(builder, buildee, player):
+    unit_unlocked = player.unit_unlocked(buildee)
+    smaller_size =  buildee.size < builder.size
+    one_making_six = (builder.size == 1 and buildee.size == 6)
+    size_appropriate = smaller_size or one_making_six
+    enough_resources = player.resource_amount >= buildee.production_cost
+    return unit_unlocked and size_appropriate and enough_resources
+
 def advance_gamestate_via_mutation(gamestate, do_turn):
     def do_blast():
         shape_type = shape_enum_to_object(part.shape_type)
@@ -616,10 +638,10 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
                     occupant.receive_damage(part.damage_dealt())
 
     def do_production():
-        if part.under_production != action.produced_unit:
-            if not player.unit_unlocked(action.produced_unit):
-                return
-            if not player.pay_for_unit(action.produced_unit):
+        if (part.under_production != action.produced_unit):
+            if unit_production_legal(unit, action.produced_unit, player):
+                player.pay_for_unit(action.produced_unit)
+            else:
                 return
             
         part.under_production = action.produced_unit
@@ -674,7 +696,7 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
         for unit in turn_dict[player]:
             for part in turn_dict[player][unit]:
                 action = turn_dict[player][unit][part]
-                if action.is_researcher() and unit.pay_energy(part, action):
+                if action.is_researcher() and unit.try_pay_energy(part, action):
                     do_research()
 
     # collectors
@@ -682,7 +704,7 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
         for unit in turn_dict[player]:
             for part in turn_dict[player][unit]:
                 action = turn_dict[player][unit][part]
-                if action.is_collector() and unit.pay_energy(part, action):
+                if action.is_collector() and unit.try_pay_energy(part, action):
                     do_collection()
 
     # armaments
@@ -690,7 +712,7 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
         for unit in turn_dict[player]:
             for part in turn_dict[player][unit]:
                 action = turn_dict[player][unit][part]
-                if action.is_armament() and unit.pay_energy(part, action):
+                if action.is_armament() and unit.try_pay_energy(part, action):
                     do_blast()
 
     # producers
@@ -698,7 +720,7 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
         for unit in turn_dict[player]:
             for part in turn_dict[player][unit]:
                 action = turn_dict[player][unit][part]
-                if action.is_producer() and unit.pay_energy(part, action):
+                if action.is_producer() and unit.try_pay_energy(part, action):
                     do_production()
 
     ### movement ###
@@ -711,7 +733,7 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
         for unit in turn_dict[player]:
             for part in turn_dict[player][unit]:
                 action = turn_dict[player][unit][part]
-                if action.is_locomotor() and unit.pay_energy(part, action):
+                if action.is_locomotor() and unit.try_pay_energy(part, action):
                     moving_units.add(unit)
 
     #fill blocked_squares and start_squares and stationary_units
