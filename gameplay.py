@@ -650,6 +650,7 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
                     occupant.receive_damage(part.damage_dealt())
 
     def do_production():
+        print(part.under_production)
         if (part.under_production != action.produced_unit):
             if unit_production_legal(unit, action.produced_unit, player):
                 player.pay_for_unit(action.produced_unit)
