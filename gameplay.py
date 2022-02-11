@@ -221,6 +221,13 @@ class Gameboard:
                 return True
         return False
 
+    def adding_would_cause_conflict(self, placeable):
+        self.add_to_board(placeable)
+        result = self.conflicts_exist()
+        self.remove_from_board(placeable)
+        return result
+        
+
 def unit_placement_in_bounds(coord, unit_size):
     return (in_bounds(coord)
             and in_bounds((coord[0]+unit_size-1, coord[1]+unit_size-1)))
@@ -650,7 +657,6 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
                     occupant.receive_damage(part.damage_dealt())
 
     def do_production():
-        print(part.under_production)
         if (part.under_production != action.produced_unit):
             if unit_production_legal(unit, action.produced_unit, player):
                 player.pay_for_unit(action.produced_unit)
@@ -661,9 +667,10 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
         if part.next_activation_produces():
             new_unit = deepcopy(action.produced_unit)
             new_unit.coords = action.out_coords
-            gamestate.gameboard.add_to_board(new_unit)
-            part.current_production_points = 0
-            part.under_production = None
+            if not gamestate.gameboard.adding_would_cause_conflict(new_unit):
+                gamestate.gameboard.add_to_board(new_unit)
+                part.current_production_points = 0
+                part.under_production = None
         else:
             part.current_production_points += part.points_per_activation()
 
