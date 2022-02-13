@@ -7,6 +7,7 @@ from twisted.internet.endpoints import TCP4ClientEndpoint, connectProtocol
 
 from dataclasses import dataclass
 
+import game_io
 import gameplay
 import gameflow
 import messages
@@ -28,11 +29,19 @@ class MessageProtocol(NetstringReceiver):
         self.encodeAndSendString(self.request)
 
     def stringDecoded(self, string):
-        print(string)
+        self.response = jsons.loads(string)
         self.transport.loseConnection()
 
 @crochet.wait_for(5)
 def send_message(message):
     message_string = jsons.dumps(message, verbose=True)
     point = TCP4ClientEndpoint(reactor, "localhost", 8007)
-    connectProtocol(point, MessageProtocol(message_string))
+    message_protocol = MessageProtocol(message_string)
+    connectProtocol(point, message_protocol)
+    return message_protocol
+
+def wait_for_response(message):
+    message_protocol = send_message(message)
+    while (message_protocol.response == None):
+        pass
+    return message_protocol.response

@@ -1,4 +1,28 @@
+import os
+
 from gameplay import *
+
+def player_from_team(team_name):
+
+    unit_filenames = os.listdir("teams/"+team_name)
+
+    unit_names = []
+    for unit_filename in unit_filenames:
+        if unit_filename[-5:] != ".unit":
+            raise Exception("Unexpected filetype: " + unit_filename)
+        unit_names.append(unit_filename[:-5])
+    
+    prototypes = [unit_prototype_from_file(team_name, unit_name) for
+                  unit_name in unit_names]
+
+    player = Player(player_number=0,
+                    team_number=0,
+                    unit_prototypes=prototypes,
+                    resource_amount=20,
+                    research_amount=0)
+
+    return player
+    
 
 def unit_prototype_from_file(team_name, unit_name):
     filename = "teams/"+team_name+"/"+unit_name+".unit"

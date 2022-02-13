@@ -1,3 +1,5 @@
+import gameplay
+
 from dataclasses import dataclass
 
 @dataclass(eq=False)
@@ -6,7 +8,8 @@ class Message:
 
 @dataclass(eq=False)
 class WelcomePlayerNumber(Message):
-    pass
+    player_number: int
+    team_number: int
 
 @dataclass(eq=False)
 class BeginGameEveryone(Message):
@@ -14,7 +17,18 @@ class BeginGameEveryone(Message):
 
 @dataclass(eq=False)
 class MoreAboutMe(Message):
-    pass
+    me: gameplay.Player
+
+    def handle_on_server(self, server):
+        server.players.append(self.me)
+        player_number = len(server.players)
+        self.me.player_number = player_number
+        self.me.team_number = player_number
+        response = WelcomePlayerNumber(player_number=player_number,
+                                       team_number=player_number)
+        return response
+        
+    
 
 @dataclass(eq=False)
 class ReportTurn(Message):
