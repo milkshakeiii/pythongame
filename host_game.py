@@ -9,10 +9,16 @@ import gameplay
 import gameflow
 import messages
 
-class HostProtocol(NetstringReceiver):
+from dataclasses import dataclass
+from typing import List
+
+class ServerState:
     def __init__(self):
-        self.players = []
+        self.players = list()
         self.starting_gamestate = None
+serverState = ServerState()
+    
+class HostProtocol(NetstringReceiver):
     
     def connectionMade(self):
         print ("Connection made")
@@ -30,7 +36,7 @@ class HostProtocol(NetstringReceiver):
     def stringDecoded(self, string):
         message = jsons.loads(string)
         print(type(message))
-        response = message.handle_on_server(self)
+        response = message.handle_on_server(serverState)
         self.encodeAndSendString(jsons.dumps(response, verbose=True))
 
 

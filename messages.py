@@ -1,4 +1,5 @@
 import gameplay
+import gameflow
 
 from dataclasses import dataclass
 from typing import Optional
@@ -14,6 +15,7 @@ class WelcomeRequest(Message):
     def handle_on_server(self, server):
         server.players.append(self.me)
         player_number = len(server.players)
+        print(len(server.players))
         self.me.player_number = player_number
         self.me.team_number = player_number
         response = WelcomeResponse(player_number=player_number,
@@ -29,7 +31,7 @@ class WelcomeResponse(Message):
 class StartGameRequest(Message):
 
     def handle_on_server(self, server):
-        server.starting_gamestate = gameplay.first_arena(server.players)
+        server.starting_gamestate = gameflow.first_arena(server.players)
         response = StartGameResponse(gamestate=server.starting_gamestate)
         return response
 

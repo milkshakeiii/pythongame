@@ -74,7 +74,8 @@ class Gameflow:
 
 def first_arena(players):
     if len(players) != 2:
-        raise Exception("Two players only.")
+        raise Exception("Exactly two players required.  Found " +
+                        str(len(players)) + ".")
 
     def get_mothership(player):
         for unit in player.unit_prototypes:
