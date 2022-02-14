@@ -12,6 +12,7 @@ import messages
 class HostProtocol(NetstringReceiver):
     def __init__(self):
         self.players = []
+        self.starting_gamestate = None
     
     def connectionMade(self):
         print ("Connection made")
@@ -27,8 +28,8 @@ class HostProtocol(NetstringReceiver):
         self.stringDecoded(str(data, 'utf-8'))
 
     def stringDecoded(self, string):
-        print(string)
         message = jsons.loads(string)
+        print(type(message))
         response = message.handle_on_server(self)
         self.encodeAndSendString(jsons.dumps(response, verbose=True))
 

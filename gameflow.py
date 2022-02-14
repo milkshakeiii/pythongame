@@ -28,41 +28,21 @@ class InternetTurnsource(Turnsource):
     def __init__(self):
         pass
 
-# game creation flow:
-# host game, build gameflow
-# players join, call add_turnsource on network turnsources, send them back their
-# player numbers based on order of joining.
-# self.turnsources is populated. start game, send list of all
-# players and either seed for first gamestate or first gamestate itself.
-# 
-# players now build game flow with correct local player numbers, and
-# start game using the received gamestate.
-#
-# play proceeds with players submitting local turns and sending the turns to
-# host.  host relays turns to all palyers. game will stay in sync naturally.
 class Gameflow:
-    def __init__(self, local_player_number):
+    def __init__(self, local_player_number, starting_gamestate):
         self.local_turnsource = LocalTurnsource()
+        slef.local_turnsource.player_number = local_player_number
         self.turnsources = set()
-        self.add_turnsource(self.local_turnsource)
 
-        self.gamestates = []
+        for player in starting_gamestate.players:
+            if (player.player_number != local_player_number):
+                new_turnsource = InternetTurnsource()
+                new_turnsource.player_number = player.player_number
+                self.turnsources.add(new_turnsource)                
+
+        self.gamestates = [starting_gamestate]
         self.tick = 0
 
-    def start_game_host(self):
-        self.gamestates = [self.starting_gamestate()]
-
-    def start_game_non_host(self, starting_gamestate):
-        self.gamestates = [starting_gamestate]
-
-    '''
-    returns player number of new player
-    '''
-    def add_turnsource(self, turnsource):
-        player_number = len(self.turnsources)
-        self.turnsources.add(turnsource)
-        turnsource.player_number = player_number
-        return player_number
 
     def get_local_player(self, gamestate):
         for player in gamestate.players:
@@ -88,12 +68,67 @@ class Gameflow:
     def submit_local_turn(self, turn):
         self.local_turnsource.submit_turn(turn)
 
-    def starting_gamestate(self):
-        return test_gamestate() # TODO
-
     def most_recent_gamestate(self):
         return self.gamestates[-1]
-        
+
+
+def first_arena(players):
+    if len(players) != 2:
+        raise Exception("Two players only.")
+
+    def get_mothership(player):
+        for unit in player.unit_prototypes:
+            if unit.research_threshhold == 0 and unit.production_cost == 0:
+                return copy.deepcopy(unit)
+    
+    gameboard = gameplay.Gameboard(squares=dict())
+    mothership_one = None
+    mothership_two = None
+    player_one = None
+    player_two = None
+    for player in players:
+        if player.player_number == 1:
+            player_one = player
+            mothership_one = get_mothership(player)
+        if player.player_number == 2:
+            player_two = player
+            mothership_two = get_mothership(player)
+
+    if not all([mothership_one,
+                mothership_two,
+                player_one,
+                player_two] != None):
+        raise Exception("Player or mothership not found.")
+
+    mothership_one.coords = (4, 15)
+    mothership_two.coords = (35, 15)
+    gameboard.add_to_board(mothership_one)
+    gameboard.add_to_board(mothership_two)
+
+    for x in range(4, 6):
+        for y in range(4, 6):            
+            resource = game_io.resource_pile_factory((x, y), 25)
+            gameboard.add_to_board(test_resource)
+    for x in range(35, 37):
+        for y in range(24, 26):            
+            resource = game_io.resource_pile_factory((x, y), 50)
+            gameboard.add_to_board(test_resource)
+    for x in range(4, 6):
+        for y in range(24, 26):            
+            resource = game_io.resource_pile_factory((x, y), 25)
+            gameboard.add_to_board(test_resource)
+    for x in range(35, 37):
+        for y in range(24, 26):            
+            resource = game_io.resource_pile_factory((x, y), 50)
+            gameboard.add_to_board(test_resource)
+    for x in range(20, 26):
+        for y in range(13,17):            
+            resource = game_io.resource_pile_factory((x, y), 90)
+            gameboard.add_to_board(test_resource)
+    
+
+    return gameplay.Gamestate(gameboard=gameboard, players=players)
+            
 
 
 
