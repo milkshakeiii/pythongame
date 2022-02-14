@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 from enum import Enum
 from copy import deepcopy
 
@@ -504,7 +504,7 @@ class Armor(Part):
 
 @dataclass(eq=False)
 class Producer(Part):
-    under_production: Unit
+    under_production: Optional[Unit]
     current_production_points: int
 
     def size_under_production(self):
