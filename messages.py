@@ -31,8 +31,9 @@ class WelcomeResponse(Message):
 class StartGameRequest(Message):
 
     def handle_on_server(self, server):
-        server.starting_gamestate = gameflow.first_arena(server.players)
-        response = StartGameResponse(gamestate=server.starting_gamestate)
+        if (server.starting_gamestate == None):
+            server.starting_gamestate = gameflow.first_arena(server.players)
+        response = StartGameResponse()
         return response
 
 @dataclass(eq=False)
@@ -44,6 +45,7 @@ class GameStartPollRequest(Message):
 
     def handle_on_server(self, server):
         response = GameStartPollResponse(gamestate=server.starting_gamestate)
+        print(response)
         return response
 
 @dataclass(eq=False)

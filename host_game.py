@@ -39,8 +39,6 @@ class HostProtocol(NetstringReceiver):
         response = message.handle_on_server(serverState)
         self.encodeAndSendString(jsons.dumps(response, verbose=True))
 
-
-
 class HostProtocolFactory(Factory):
     def buildProtocol(self, addr):
         return HostProtocol()

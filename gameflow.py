@@ -95,10 +95,10 @@ def first_arena(players):
             player_two = player
             mothership_two = get_mothership(player)
 
-    if not all([mothership_one,
-                mothership_two,
-                player_one,
-                player_two] != None):
+    if not all([variable != None for variable in [mothership_one,
+                                                  mothership_two,
+                                                  player_one,
+                                                  player_two]]):
         raise Exception("Player or mothership not found.")
 
     mothership_one.coords = (4, 15)
@@ -109,23 +109,23 @@ def first_arena(players):
     for x in range(4, 6):
         for y in range(4, 6):            
             resource = game_io.resource_pile_factory((x, y), 25)
-            gameboard.add_to_board(test_resource)
+            gameboard.add_to_board(resource)
     for x in range(35, 37):
         for y in range(24, 26):            
             resource = game_io.resource_pile_factory((x, y), 50)
-            gameboard.add_to_board(test_resource)
+            gameboard.add_to_board(resource)
     for x in range(4, 6):
         for y in range(24, 26):            
             resource = game_io.resource_pile_factory((x, y), 25)
-            gameboard.add_to_board(test_resource)
+            gameboard.add_to_board(resource)
     for x in range(35, 37):
         for y in range(24, 26):            
             resource = game_io.resource_pile_factory((x, y), 50)
-            gameboard.add_to_board(test_resource)
+            gameboard.add_to_board(resource)
     for x in range(20, 26):
         for y in range(13,17):            
             resource = game_io.resource_pile_factory((x, y), 90)
-            gameboard.add_to_board(test_resource)
+            gameboard.add_to_board(resource)
     
 
     return gameplay.Gamestate(gameboard=gameboard, players=players)
