@@ -31,7 +31,7 @@ class InternetTurnsource(Turnsource):
 class Gameflow:
     def __init__(self, local_player_number, starting_gamestate):
         self.local_turnsource = LocalTurnsource()
-        slef.local_turnsource.player_number = local_player_number
+        self.local_turnsource.player_number = local_player_number
         self.turnsources = set()
 
         for player in starting_gamestate.players:

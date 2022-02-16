@@ -2,6 +2,7 @@ import networking
 import messages
 import game_io
 import game
+import gameflow
 
 import time
 
@@ -12,16 +13,19 @@ welcome_response = networking.wait_for_response(messages.WelcomeRequest(me=me))
 me.player_number = welcome_response.player_number
 me.team_number = welcome_response.team_number
 
-gameflow = None
+internet_gameflow = None
 
 while True:
     answer = input("Start game? (Y/N) ")
     if answer in ["Y", "y", "yes", "Yes"]:
         networking.wait_for_response(messages.StartGameRequest())
 
-    poll_response = networking.wait_for_response(messages.GameStartPollRequest())
-    if poll_response.gamestate != None:
-        gameflow = gameflow.Gameflow(me.player_number)
+    poll_response = networking.wait_for_response(
+        messages.GameStartPollRequest())
+    gamestate = poll_response.gamestate
+    if gamestate != None:
+        internet_gameflow = gameflow.Gameflow(me.player_number,
+                                              starting_gamestate=gamestate)
         break
         
-game.run_game(gameflow)
+game.run_game(internet_gameflow)

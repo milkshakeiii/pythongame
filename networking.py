@@ -29,14 +29,20 @@ class MessageProtocol(NetstringReceiver):
         self.encodeAndSendString(self.request)
 
     def stringDecoded(self, string):
-        self.response = jsons.loads(string)
+        response_container = jsons.loads(string, cls=messages.MessageContainer)
+        self.response = jsons.loads(
+            response_container.message,
+            cls=response_container.message_type)
         self.transport.loseConnection()
 
 @crochet.wait_for(5)
 def send_message(message):
-    message_string = jsons.dumps(message, verbose=True)
+    message_string = jsons.dumps(message)
+    message_container_string = jsons.dumps(
+        messages.MessageContainer(message=message_string,
+                         message_type=message.message_type()))
     point = TCP4ClientEndpoint(reactor, "localhost", 8007)
-    message_protocol = MessageProtocol(message_string)
+    message_protocol = MessageProtocol(message_container_string)
     connectProtocol(point, message_protocol)
     return message_protocol
 

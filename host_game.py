@@ -34,10 +34,15 @@ class HostProtocol(NetstringReceiver):
         self.stringDecoded(str(data, 'utf-8'))
 
     def stringDecoded(self, string):
-        message = jsons.loads(string)
+        message_container = jsons.loads(string, cls=messages.MessageContainer)
+        message = jsons.loads(message_container.message,
+                              cls=message_container.message_type)
         print(type(message))
-        response = message.handle_on_server(serverState)
-        self.encodeAndSendString(jsons.dumps(response, verbose=True))
+        response_body = message.handle_on_server(serverState)
+        response = messages.MessageContainer(
+            message=jsons.dumps(response_body),
+            message_type=response_body.message_type())
+        self.encodeAndSendString(jsons.dumps(response))
 
 class HostProtocolFactory(Factory):
     def buildProtocol(self, addr):
