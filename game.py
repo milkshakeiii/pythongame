@@ -684,7 +684,7 @@ class ResearchWindow:
         self.draw_boxes(player)
 
 
-def run_game(gameflow):
+def run_game(gameflow, gamestate):
     clock = pygame.time.Clock()
     pygame.init()
     display = Display()
@@ -692,8 +692,6 @@ def run_game(gameflow):
     mouseover_window = MouseoverWindow()
     research_window = ResearchWindow()
     display_board = DisplayBoard()
-    
-    gamestate = gameflow.most_recent_gamestate()
 
     display_board.load_gameboard(gamestate.gameboard)
     display_board.resurface()
@@ -780,5 +778,6 @@ def run_game(gameflow):
 
 
 if __name__=='__main__':
-    gameflow = gameflow.Gameflow(0, gameflow.test_gamestate())
-    run_game(gameflow)
+    starting_gamestate = gameflow.test_gamestate()
+    gameflow = gameflow.Gameflow(0, starting_gamestate)
+    run_game(gameflow, starting_gamestate)

@@ -46,7 +46,7 @@ class Gameflow:
                 new_turnsource.player_number = player.player_number
                 self.turnsources.add(new_turnsource)                
 
-        self.gamestates = [starting_gamestate]
+        self.gamestate_record = [copy.deepcopy(starting_gamestate)]
         self.tick = 0
 
 
@@ -67,15 +67,13 @@ class Gameflow:
             turns = [turnsource.get_turn() for turnsource in self.turnsources]
             merged_turn = gameplay.merge_turns(turns)
             gameplay.advance_gamestate_via_mutation(gamestate, merged_turn)
-            self.gamestates.append(copy.deepcopy(gamestate))
+            self.gamestate_record.append(copy.deepcopy(gamestate))
             return True
         return False
 
     def submit_local_turn(self, turn):
         self.local_turnsource.submit_turn(turn)
 
-    def most_recent_gamestate(self):
-        return self.gamestates[-1]
 
 
 def first_arena(players):

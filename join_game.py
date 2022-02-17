@@ -25,8 +25,8 @@ while True:
     gamestate = poll_response.gamestate
     if gamestate != None:
         print(gamestate)
+        print(id(gamestate.gameboard.squares[(35, 15)][0]))
         internet_gameflow = gameflow.Gameflow(me.player_number,
-                                              starting_gamestate=gamestate)
+                                              gamestate)
+        game.run_game(internet_gameflow, gamestate)
         break
-        
-game.run_game(internet_gameflow)

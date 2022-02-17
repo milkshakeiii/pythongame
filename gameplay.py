@@ -213,11 +213,15 @@ class Gameboard:
 
     def remove_from_board(self, placeable):
         size = placeable.size
+        print(id(placeable))
         for i in range(size):
             for j in range(size):
                 coords = (placeable.coords[0]+i, placeable.coords[1]+j)
+                print(coords)
+                print(id(self.squares[coords][0]))
                 if not (placeable in self.squares[coords]):
-                    raise Exception("Expected placeable not found at " + coords)
+                    raise Exception("Expected placeable not found at " +
+                                    str(coords))
                 self.squares[coords].remove(placeable)
 
     def conflicts_exist(self):
