@@ -780,6 +780,5 @@ def run_game(gameflow):
 
 
 if __name__=='__main__':
-    gameflow = gameflow.Gameflow(0)
-    gameflow.start_game_host()
+    gameflow = gameflow.Gameflow(0, gameflow.test_gamestate())
     run_game(gameflow)

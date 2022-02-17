@@ -32,7 +32,7 @@ class Gameflow:
     def __init__(self, local_player_number, starting_gamestate):
         self.local_turnsource = LocalTurnsource()
         self.local_turnsource.player_number = local_player_number
-        self.turnsources = set()
+        self.turnsources = set([self.local_turnsource])
 
         for player in starting_gamestate.players:
             if (player.player_number != local_player_number):

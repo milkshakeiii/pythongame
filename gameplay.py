@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Union
 from enum import Enum
 from copy import deepcopy
 
@@ -90,7 +90,13 @@ class Part():
 
 @dataclass(eq=False)
 class Unit(Placeable):
-    parts: List[Part]
+    parts: List[Union['Locomotor',
+                      'Producer',
+                      'Armor',
+                      'Armament',
+                      'Collector',
+                      'Researcher',
+                      'EnergyCore']]
     owner_player_number: int
     owner_team_number: int
     unit_name: str
@@ -187,7 +193,7 @@ class Player:
 
 @dataclass(eq=False)
 class Gameboard:
-    squares: Dict[Tuple[int, int], List[Placeable]]
+    squares: Dict[Tuple[int, int], List[Union['Unit', 'ResourcePile', 'Wall']]]
 
     def get_single_occupant(self, square):
         occupants = self.squares.get(square, [])
@@ -247,7 +253,7 @@ class ShapeType():
     depends on the previous being reachable
     '''
     def move_paths(self, start_coord, part_size, unit_size) -> list:
-        return NotImplemented
+        raise Exception("move_paths called on ShapeType superclass.")
 
     '''
     blast_paths returns the same type of data as
@@ -344,7 +350,7 @@ class Wall(Placeable):
 @dataclass(eq=False)
 class Action():
     def energy_cost(self, part):
-        return NotImplemented
+        raise Exception("energy_cost called on Action superclass")
 
     def is_armament(self):
         return False
@@ -389,6 +395,8 @@ class LocomotorAction(Action):
 
 @dataclass(eq=False)
 class Collector(Part):
+    decoy_collector: Optional['Collector'] = None
+    
     def max_resources_removed_per_turn(self) -> int:
         return self.size
 
@@ -415,6 +423,8 @@ class CollectorAction(Action):
 @dataclass(eq=False)
 class Armament(Part):
     shape_type: ShapeTypeEnum
+
+    decoy_armament: Optional['Armament'] = None
 
     def range(self):
         return self.size*2
@@ -443,6 +453,10 @@ class ArmamentAction(Action):
 
 @dataclass(eq=False)
 class Researcher(Part):
+
+    decoy_1: int = 0
+    decoy_2: int = 0
+    
     def research_amount(self):
         return self.size
 

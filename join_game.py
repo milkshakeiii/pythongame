@@ -24,6 +24,7 @@ while True:
         messages.GameStartPollRequest())
     gamestate = poll_response.gamestate
     if gamestate != None:
+        print(gamestate)
         internet_gameflow = gameflow.Gameflow(me.player_number,
                                               starting_gamestate=gamestate)
         break
