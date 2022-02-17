@@ -766,7 +766,7 @@ def run_game(gameflow, gamestate):
             working_turn = gameplay.default_turn_for(gamestate,
                                                      local_player,
                                                      working_turn)
-            turn_number = str(len(gameflow.gamestates))
+            turn_number = str(len(gameflow.gamestate_record))
             research_window.draw_player_info(local_player)
             research_window.draw_button_text("Submit turn " + turn_number,
                                              (50, 70, 50))

@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, List, Tuple, Optional, Union
 from enum import Enum
 from copy import deepcopy
+from uuid import UUID, uuid4
 
 class ShapeTypeEnum(Enum):
     BISHOP = 1
@@ -25,7 +26,20 @@ def shape_enum_to_object(enum: ShapeTypeEnum):
     raise "Unrecognized enum"
 
 @dataclass(eq=False)
-class Placeable:
+class NetHashable:
+    uuid: UUID
+    
+    def __eq__(self, other):
+        if (other == None):
+            return False
+        return self.uuid == other.uuid
+
+    def __hash__(self):
+        return int(self.uuid)
+        
+
+@dataclass(eq=False)
+class Placeable(NetHashable):
     image_name: str
     coords: Tuple[int, int]
     size: int
@@ -40,7 +54,7 @@ class Placeable:
         return False
 
 @dataclass(eq=False)
-class Part():
+class Part(NetHashable):
     size: int
     quality: float
     damage: int
@@ -169,7 +183,7 @@ class Unit(Placeable):
                 self.owner_player_number)
 
 @dataclass(eq=False)
-class Player:
+class Player(NetHashable):
     player_number: int
     team_number: int
     unit_prototypes: List[Unit]
@@ -213,12 +227,9 @@ class Gameboard:
 
     def remove_from_board(self, placeable):
         size = placeable.size
-        print(id(placeable))
         for i in range(size):
             for j in range(size):
                 coords = (placeable.coords[0]+i, placeable.coords[1]+j)
-                print(coords)
-                print(id(self.squares[coords][0]))
                 if not (placeable in self.squares[coords]):
                     raise Exception("Expected placeable not found at " +
                                     str(coords))

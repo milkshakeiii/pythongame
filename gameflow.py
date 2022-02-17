@@ -1,5 +1,7 @@
 import copy
 
+from uuid import uuid4
+
 import gameplay
 import game_io
 
@@ -164,7 +166,8 @@ def test_gamestate():
                  game_io.unit_prototype_from_file("test_team_1", "small_2"),
                  game_io.unit_prototype_from_file("test_team_1", "big_1")]
 
-    test_player = gameplay.Player(player_number=0,
+    test_player = gameplay.Player(uuid=uuid4(),
+                                  player_number=0,
                                   team_number=0,
                                   unit_prototypes=test_army,
                                   resource_amount=100,

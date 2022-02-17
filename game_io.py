@@ -1,6 +1,7 @@
 import os
 
 from gameplay import *
+from uuid import uuid4
 
 def player_from_team(team_name):
 
@@ -15,7 +16,8 @@ def player_from_team(team_name):
     prototypes = [unit_prototype_from_file(team_name, unit_name) for
                   unit_name in unit_names]
 
-    player = Player(player_number=0,
+    player = Player(uuid=uuid4(),
+                    player_number=0,
                     team_number=0,
                     unit_prototypes=prototypes,
                     resource_amount=20,
@@ -106,25 +108,29 @@ def unit_prototype_from_file(team_name, unit_name):
                 raise exception("Unrecognized part_shape value: " + part_shape_name)
         part = None
         if part_name == "locomotor":
-            part = Locomotor(size=part_size,
+            part = Locomotor(uuid=uuid4(),
+                             size=part_size,
                              quality=part_quality,
                              damage=0,
                              shape_type=part_shape)
         elif part_name == "collector":
-            part = Collector(size=part_size,
+            part = Collector(uuid=uuid4(),
+                             size=part_size,
                              quality=part_quality,
                              damage=0,
                              spot_1_decoy=0,
                              spot_2_decoy=0,)
         elif part_name == "armament":
-            part = Armament(size=part_size,
+            part = Armament(uuid=uuid4(),
+                            size=part_size,
                             quality=part_quality,
                             damage=0,
                             shape_type=part_shape,
                             spot_2_decoy=0,
                             spot_3_decoy=0,)
         elif part_name == "researcher":
-            part = Researcher(size=part_size,
+            part = Researcher(uuid=uuid4(),
+                              size=part_size,
                               quality=part_quality,
                               damage=0,
                               spot_1_decoy=0,
@@ -132,20 +138,23 @@ def unit_prototype_from_file(team_name, unit_name):
                               spot_3_decoy=0,
                               spot_4_decoy=0,)
         elif part_name == "core":
-            part = EnergyCore(size=part_size,
-                            quality=part_quality,
-                            damage=0,
-                            current_energy=0,
-                            spot_2_decoy=0,
-                            spot_3_decoy=0,
-                            spot_4_decoy=0,
-                            spot_5_decoy=0,)
+            part = EnergyCore(uuid=uuid4(),
+                              size=part_size,
+                              quality=part_quality,
+                              damage=0,
+                              current_energy=0,
+                              spot_2_decoy=0,
+                              spot_3_decoy=0,
+                              spot_4_decoy=0,
+                              spot_5_decoy=0,)
         elif part_name == "armor":
-            part = Armor(size=part_size,
+            part = Armor(uuid=uuid4(),
+                         size=part_size,
                          quality=part_quality,
                          damage=0)
         elif part_name == "producer":
-            part = Producer(size=part_size,
+            part = Producer(uuid=uuid4(),
+                            size=part_size,
                             quality=part_quality,
                             damage=0,
                             under_production=None,
@@ -158,7 +167,8 @@ def unit_prototype_from_file(team_name, unit_name):
             raise Exception("Unrecognized part name: " + part_name)
         parts.append(part)
     
-    prototype = Unit(image_name=image_name,
+    prototype = Unit(uuid=uuid4(),
+                     image_name=image_name,
                      coords=(-1, -1),
                      size=size,
                      parts=parts,
@@ -175,7 +185,8 @@ def resource_pile_factory(coords, amount):
         image_name = "medium_resource"
     if amount < 30:
         image_name = "small_resource"
-    return ResourcePile(image_name=image_name,
+    return ResourcePile(uuid=uuid4(),
+                        image_name=image_name,
                         coords=coords,
                         size=1,
                         amount=amount)
