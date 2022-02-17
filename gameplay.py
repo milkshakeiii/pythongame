@@ -90,13 +90,13 @@ class Part():
 
 @dataclass(eq=False)
 class Unit(Placeable):
-    parts: List[Union['Locomotor',
-                      'Producer',
-                      'Armor',
+    parts: List[Union['Producer',
+                      'EnergyCore',
+                      'Researcher',
                       'Armament',
                       'Collector',
-                      'Researcher',
-                      'EnergyCore']]
+                      'Locomotor',
+                      'Armor',]]
     owner_player_number: int
     owner_team_number: int
     unit_name: str
@@ -368,6 +368,14 @@ class Action():
         return False
 
 @dataclass(eq=False)
+class Armor(Part):
+    def display_name(self):
+        return "Armor"
+
+    def is_armor(self):
+        return True
+
+@dataclass(eq=False)
 class Locomotor(Part):
     shape_type: ShapeTypeEnum
 
@@ -395,7 +403,8 @@ class LocomotorAction(Action):
 
 @dataclass(eq=False)
 class Collector(Part):
-    decoy_collector: Optional['Collector'] = None
+    spot_1_decoy: int
+    spot_2_decoy: int
     
     def max_resources_removed_per_turn(self) -> int:
         return self.size
@@ -424,7 +433,8 @@ class CollectorAction(Action):
 class Armament(Part):
     shape_type: ShapeTypeEnum
 
-    decoy_armament: Optional['Armament'] = None
+    spot_2_decoy: int
+    spot_3_decoy: int
 
     def range(self):
         return self.size*2
@@ -453,9 +463,10 @@ class ArmamentAction(Action):
 
 @dataclass(eq=False)
 class Researcher(Part):
-
-    decoy_1: int = 0
-    decoy_2: int = 0
+    spot_1_decoy: int
+    spot_2_decoy: int
+    spot_3_decoy: int
+    spot_4_decoy: int
     
     def research_amount(self):
         return self.size
@@ -480,6 +491,10 @@ class ResearcherAction(Action):
 @dataclass(eq=False)
 class EnergyCore(Part):
     current_energy: float
+    spot_2_decoy: int
+    spot_3_decoy: int
+    spot_4_decoy: int
+    spot_5_decoy: int
 
     def maximum_energy(self):
         return self.size*10
@@ -509,17 +524,13 @@ class EnergyCore(Part):
         self.current_energy = min(self.maximum_energy(), self.current_energy)
 
 @dataclass(eq=False)
-class Armor(Part):
-    def display_name(self):
-        return "Armor"
-
-    def is_armor(self):
-        return True
-
-@dataclass(eq=False)
 class Producer(Part):
     under_production: Optional[Unit]
     current_production_points: int
+    spot_3_decoy: int
+    spot_4_decoy: int
+    spot_5_decoy: int
+    spot_6_decoy: int
 
     def size_under_production(self):
         return self.under_production.size
@@ -657,7 +668,7 @@ def unit_production_legal(builder, buildee, player):
     enough_resources = player.resource_amount >= buildee.production_cost
     return unit_unlocked and size_appropriate and enough_resources
 
-def advance_gamestate_via_mutation(gamestate, do_turn):
+def advance_gamestate_via_mutation(gamestate, do_turn):    
     def do_blast():
         shape_type = shape_enum_to_object(part.shape_type)
         for path in shape_type.blast_paths(unit.coords, part.size, unit.size):

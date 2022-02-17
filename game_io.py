@@ -113,21 +113,33 @@ def unit_prototype_from_file(team_name, unit_name):
         elif part_name == "collector":
             part = Collector(size=part_size,
                              quality=part_quality,
-                             damage=0)
+                             damage=0,
+                             spot_1_decoy=0,
+                             spot_2_decoy=0,)
         elif part_name == "armament":
             part = Armament(size=part_size,
-                             quality=part_quality,
-                             damage=0,
-                             shape_type=part_shape)
+                            quality=part_quality,
+                            damage=0,
+                            shape_type=part_shape,
+                            spot_2_decoy=0,
+                            spot_3_decoy=0,)
         elif part_name == "researcher":
             part = Researcher(size=part_size,
-                             quality=part_quality,
-                             damage=0)
+                              quality=part_quality,
+                              damage=0,
+                              spot_1_decoy=0,
+                              spot_2_decoy=0,
+                              spot_3_decoy=0,
+                              spot_4_decoy=0,)
         elif part_name == "core":
             part = EnergyCore(size=part_size,
                             quality=part_quality,
                             damage=0,
-                            current_energy=0)
+                            current_energy=0,
+                            spot_2_decoy=0,
+                            spot_3_decoy=0,
+                            spot_4_decoy=0,
+                            spot_5_decoy=0,)
         elif part_name == "armor":
             part = Armor(size=part_size,
                          quality=part_quality,
@@ -137,7 +149,11 @@ def unit_prototype_from_file(team_name, unit_name):
                             quality=part_quality,
                             damage=0,
                             under_production=None,
-                            current_production_points=0)
+                            current_production_points=0,
+                            spot_3_decoy=0,
+                            spot_4_decoy=0,
+                            spot_5_decoy=0,
+                            spot_6_decoy=0,)
         else:
             raise Exception("Unrecognized part name: " + part_name)
         parts.append(part)
