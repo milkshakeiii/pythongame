@@ -9,10 +9,10 @@ class Turnsource:
         self.player_number = None # gets set when added to a gameflow
 
     def turn_ready(self):
-        return NotImplemented
+        raise Exception("turn_ready called on Turnsource superclass.")
 
     def get_turn(self):
-        return NotImplemented
+        raise Exception("get_turn called on Turnsource superclass.")
 
 class LocalTurnsource(Turnsource):
     def submit_turn(self, turn):
@@ -27,6 +27,12 @@ class LocalTurnsource(Turnsource):
 class InternetTurnsource(Turnsource):
     def __init__(self):
         pass
+
+    def turn_ready(self):
+        return True
+
+    def get_turn(self):
+        return gameplay.build_gameturn([])
 
 class Gameflow:
     def __init__(self, local_player_number, starting_gamestate):
