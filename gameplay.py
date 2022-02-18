@@ -53,6 +53,14 @@ class Placeable(NetHashable):
     def is_unit(self):
         return False
 
+PartType = Union['Producer',
+                 'EnergyCore',
+                 'Researcher',
+                 'Armament',
+                 'Collector',
+                 'Locomotor',
+                 'Armor',]
+
 @dataclass(eq=False)
 class Part(NetHashable):
     size: int
@@ -104,13 +112,7 @@ class Part(NetHashable):
 
 @dataclass(eq=False)
 class Unit(Placeable):
-    parts: List[Union['Producer',
-                      'EnergyCore',
-                      'Researcher',
-                      'Armament',
-                      'Collector',
-                      'Locomotor',
-                      'Armor',]]
+    parts: List[PartType]
     owner_player_number: int
     owner_team_number: int
     unit_name: str
@@ -377,6 +379,12 @@ class Wall(Placeable):
     def is_wall(self):
         return True
 
+ActionType = Union['ProducerAction',
+                   'ResearcherAction',
+                   'ArmamentAction',
+                   'CollectorAction',
+                   'LocomotorAction']
+
 @dataclass(eq=False)
 class Action():
     def energy_cost(self, part):
@@ -421,6 +429,9 @@ class Locomotor(Part):
     def is_locomotor(self):
         return True
 
+def locomotor_action_factory(move_target):
+    return LocomotorAction(move_target=move_target)
+
 @dataclass(eq=False)
 class LocomotorAction(Action):
     move_target: Tuple[int, int] # in relative spaces
@@ -451,8 +462,15 @@ class Collector(Part):
     def is_collector(self):
         return True
 
+def collector_action_factory():
+    return CollectorAction(spot_1_decoy=0,
+                           spot_2_decoy=0)
+
 @dataclass(eq=False)
 class CollectorAction(Action):
+    spot_1_decoy: int
+    spot_2_decoy: int
+    
     def energy_cost(self, collector):
         return collector.energy_cost()
 
@@ -481,9 +499,17 @@ class Armament(Part):
     def is_armament(self):
         return True
 
+def armament_action_factory(blast_index):
+    return ArmamentAction(blast_index=blast_index,
+                          spot_2_decoy=0,
+                          spot_3_decoy=0)
+
 @dataclass(eq=False)
 class ArmamentAction(Action):
     blast_index: int
+
+    spot_2_decoy: int
+    spot_3_decoy: int
 
     def energy_cost(self, armament):
         return armament.energy_cost()
@@ -510,8 +536,19 @@ class Researcher(Part):
     def is_researcher(self):
         return True
 
+def researcher_action_factory():
+    return ResearcherAction(spot_1_decoy=0,
+                            spot_2_decoy=0,
+                            spot_3_decoy=0,
+                            spot_4_decoy=0)
+
 @dataclass(eq=False)
 class ResearcherAction(Action):
+    spot_1_decoy: int
+    spot_2_decoy: int
+    spot_3_decoy: int
+    spot_4_decoy: int
+    
     def energy_cost(self, researcher):
         return researcher.energy_cost()
 
@@ -608,10 +645,22 @@ class Producer(Part):
     def is_producer(self):
         return True
 
+def producer_action_factory(produced_unit, out_coords):
+    return ProducerAction(produced_unit=produced_unit,
+                          out_coords=out_coords,
+                          spot_3_decoy=0,
+                          spot_4_decoy=0,
+                          spot_5_decoy=0,
+                          spot_6_decoy=0)
+
 @dataclass(eq=False)
 class ProducerAction(Action):
     produced_unit: Unit
     out_coords: tuple
+    spot_3_decoy: int
+    spot_4_decoy: int
+    spot_5_decoy: int
+    spot_6_decoy: int
 
     def energy_cost(self, producer):
         return producer.energy_cost()
@@ -629,7 +678,7 @@ def build_gameturn(players):
 class Gameturn:
     players_to_units_to_parts_to_actions: Dict[Player,
                                                Dict[Unit,
-                                                    Dict[Part, Action]]]
+                                                    Dict[PartType, ActionType]]]
 
     def add_action(self, player, unit, part, action):
         self[player][unit] = self[player].get(unit, dict())
@@ -677,16 +726,15 @@ def default_turn_for(gamestate, player, working_turn):
         for part in working_turn[player][unit]:
             action = working_turn[player][unit][part]
             if action.is_researcher():
-                new_action = ResearcherAction()
+                new_action = researcher_action_factory()
                 default_turn.add_action(player, unit, part, new_action)
             elif action.is_collector():
-                new_action = CollectorAction()
+                new_action = collector_action_factory()
                 default_turn.add_action(player, unit, part, new_action)
             elif (action.is_producer() and
                   part.under_production == action.produced_unit):
-                new_action = ProducerAction(
-                    produced_unit=action.produced_unit,
-                    out_coords=action.out_coords)
+                new_action = producer_action_factory(action.produced_unit,
+                                                     action.out_coords)
                 default_turn.add_action(player, unit, part, new_action)
     return default_turn
 
@@ -722,6 +770,8 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
         if part.next_activation_produces():
             new_unit = deepcopy(action.produced_unit)
             new_unit.coords = action.out_coords
+            new_unit.owner_player_number = unit.owner_player_number
+            new_unit.owner_team_number = unit.owner_team_number
             if not gamestate.gameboard.adding_would_cause_conflict(new_unit):
                 gamestate.gameboard.add_to_board(new_unit)
                 part.current_production_points = 0

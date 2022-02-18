@@ -145,7 +145,7 @@ class DisplayBoard:
         for unit in gameturn[player]:
             for part in gameturn[player][unit]:
                 action = gameturn[player][unit][part]
-                if type(action) is gameplay.ArmamentAction:
+                if action.is_armament():
                     shape_type = gameplay.shape_enum_to_object(part.shape_type)
                     blast_paths = shape_type.blast_paths(unit.coords,
                                                          part.size,
@@ -155,7 +155,7 @@ class DisplayBoard:
                         self.draw_square(square[0],
                                          square[1],
                                          HighlightColor.LIGHT_RED)
-                if type(action) is gameplay.LocomotorAction:
+                if action.is_locomotor():
                     shape_type = gameplay.shape_enum_to_object(part.shape_type)
                     move_paths = shape_type.move_paths(unit.coords,
                                                        part.size,
@@ -171,7 +171,7 @@ class DisplayBoard:
                                              HighlightColor.LIGHT_GREEN)
                             if square == target_coords:
                                 break
-                if type(action) is gameplay.ProducerAction:
+                if action.is_producer():
                     if action.out_coords != None:
                         self.draw_square(action.out_coords[0],
                                          action.out_coords[1],
@@ -282,13 +282,13 @@ class MouseoverWindow:
                                     clicked_part):
                 gameturn.remove_action(local_player, self.locked, clicked_part)
             elif clicked_part.is_researcher():
-                action = gameplay.ResearcherAction()
+                action = gameplay.researcher_action_factory()
                 gameturn.add_action(local_player,
                                     self.locked,
                                     clicked_part,
                                     action)
             elif clicked_part.is_collector():
-                action = gameplay.CollectorAction()
+                action = gameplay.collector_action_factory()
                 gameturn.add_action(local_player,
                                     self.locked,
                                     clicked_part,
@@ -309,7 +309,7 @@ class MouseoverWindow:
                                           self.ui_active_part.size,
                                           self.locked.size):
                 if clicked_coords in path:
-                    action = gameplay.ArmamentAction(blast_index=index)
+                    action = gameplay.armament_action_factory(index)
                     gameturn.add_action(local_player,
                                         self.locked,
                                         self.ui_active_part,
@@ -328,7 +328,7 @@ class MouseoverWindow:
                     if clicked_coords == coord:
                         delta = (coord[0] - self.locked.coords[0],
                                  coord[1] - self.locked.coords[1])
-                        action = gameplay.LocomotorAction(move_target=delta)
+                        action = gameplay.locomotor_action_factory(delta)
                         gameturn.add_action(local_player,
                                             self.locked,
                                             self.ui_active_part,
@@ -345,8 +345,8 @@ class MouseoverWindow:
                                                           self.locked.size,
                                                           build_unit.size):
                 if clicked_coords == coord:
-                    action = gameplay.ProducerAction(produced_unit=build_unit,
-                                                     out_coords=clicked_coords)
+                    action = gameplay.producer_action_factory(build_unit,
+                                                              clicked_coords)
                     gameturn.add_action(local_player,
                                         self.locked,
                                         self.ui_active_part,
