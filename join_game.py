@@ -8,7 +8,7 @@ import time
 
 team_name = input("Welcome.  Please input your team name: ")
 me = game_io.player_from_team(team_name)
-
+        
 welcome_response = networking.wait_for_response(messages.WelcomeRequest(me=me))
 me.player_number = welcome_response.player_number
 me.team_number = welcome_response.team_number
@@ -24,8 +24,7 @@ while True:
         messages.GameStartPollRequest())
     gamestate = poll_response.gamestate
     if gamestate != None:
-        print(gamestate)
-        print(id(gamestate.gameboard.squares[(35, 15)][0]))
+        gamestate.gameboard.prune_transporter_clones()
         internet_gameflow = gameflow.Gameflow(me.player_number,
                                               gamestate)
         game.run_game(internet_gameflow, gamestate)

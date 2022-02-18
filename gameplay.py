@@ -209,6 +209,17 @@ class Player(NetHashable):
 class Gameboard:
     squares: Dict[Tuple[int, int], List[Union['Unit', 'ResourcePile', 'Wall']]]
 
+    def prune_transporter_clones(self):
+        originals = dict()
+        new_squares = dict()
+        for coords, placeables in self.squares.items():
+            new_squares[coords] = list()
+            for placeable in placeables:
+                if placeable not in originals:
+                    originals[placeable] = placeable
+                new_squares[coords].append(originals[placeable])
+        self.squares = new_squares
+
     def get_single_occupant(self, square):
         occupants = self.squares.get(square, [])
         occupants = [o for o in occupants if not o.is_resource_pile()]
@@ -683,7 +694,7 @@ def unit_production_legal(builder, buildee, player):
     enough_resources = player.resource_amount >= buildee.production_cost
     return unit_unlocked and size_appropriate and enough_resources
 
-def advance_gamestate_via_mutation(gamestate, do_turn):    
+def advance_gamestate_via_mutation(gamestate, do_turn):
     def do_blast():
         shape_type = shape_enum_to_object(part.shape_type)
         for path in shape_type.blast_paths(unit.coords, part.size, unit.size):

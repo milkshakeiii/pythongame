@@ -62,7 +62,6 @@ class GameStartPollRequest(Message):
 
     def handle_on_server(self, server):
         response = GameStartPollResponse(gamestate=server.starting_gamestate)
-        print(response)
         return response
 
     def message_type(self):
