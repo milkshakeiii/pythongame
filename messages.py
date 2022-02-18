@@ -76,5 +76,22 @@ class GameStartPollResponse(Message):
 
 @dataclass(eq=False)
 class ReportTurnRequest(Message):
+    gameturn: gameplay.Gameturn
+    
     def message_type(self):
         return "messages.ReportTurnRequest"
+
+@dataclass(eq=False)
+class ReportTurnResponse(Message):
+    def message_type(self):
+        return "messages.ReportTurnResponse"
+
+@dataclass(eq=False)
+class TurnPollRequest(Message):
+    def message_type(self):
+        return "messages.TurnPollRequest"
+
+@dataclass(eq=False)
+class TurnPollResponse(Message):
+    def message_type(self):
+        return "messages.TurnPollResponse"
