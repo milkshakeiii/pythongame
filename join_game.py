@@ -27,5 +27,6 @@ while True:
         gamestate.gameboard.prune_transporter_clones()
         internet_gameflow = gameflow.Gameflow(me.player_number,
                                               gamestate)
+        print("Player number: " + str(me.player_number))
         game.run_game(internet_gameflow, gamestate)
         break

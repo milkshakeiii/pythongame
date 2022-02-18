@@ -86,7 +86,9 @@ def first_arena(players):
     def get_mothership(player):
         for unit in player.unit_prototypes:
             if unit.research_threshhold == 0 and unit.production_cost == 0:
-                return copy.deepcopy(unit)
+                mothership = copy.deepcopy(unit)
+                mothership.set_owner(player)
+                return mothership
     
     gameboard = gameplay.Gameboard(squares=dict())
     mothership_one = None

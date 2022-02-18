@@ -274,6 +274,9 @@ class MouseoverWindow:
             clicked_part = self.locked.parts[clicked_part_index]
             if not clicked_part.is_functional():
                 pass
+            if not (self.locked.owner_player_number ==
+                    local_player.player_number):
+                pass
             elif gameturn.part_active(local_player,
                                     self.locked,
                                     clicked_part):

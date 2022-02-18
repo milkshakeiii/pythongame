@@ -117,6 +117,10 @@ class Unit(Placeable):
     production_cost: int
     research_threshhold: float
 
+    def set_owner(self, owner):
+        self.owner_player_number = owner.player_number
+        self.owner_team_number = owner.team_number
+
     def summed_hp(self):
         result = 0
         for part in self.parts:
