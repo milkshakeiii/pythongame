@@ -22,8 +22,9 @@ class Turnsource:
 class LocalTurnsource(Turnsource):
     def submit_turn(self, turn, turn_index):
         self.turn = turn
-        networking.send_message(ReportTurnRequest(gameturn=turn,
-                                                  turn_index=turn_index))
+        networking.send_message(
+            messages.ReportTurnRequest(gameturn=turn,
+                                       turn_index=turn_index))
 
     def turn_ready(self, turn_index):
         return self.turn != None
@@ -33,7 +34,6 @@ class LocalTurnsource(Turnsource):
 
 class InternetTurnsource(Turnsource):    
     def __init__(self):
-        self.turn = turn
         self.response_protocol = None
         self.last_request_time = 0
 
@@ -51,7 +51,7 @@ class InternetTurnsource(Turnsource):
         if ((time.time() - self.last_request_time) > 5
              and self.response_protocol == None):
             self.response_protocol = networking.send_message(
-                TurnPollRequest(turn_index=turn_index))
+                messages.TurnPollRequest(turn_index=turn_index))
             self.last_request_time = time.time()
 
     def get_turn(self):
@@ -82,7 +82,8 @@ class Gameflow:
     return True iff the turn has been successfully advanced
     '''
     def try_to_advance_turn(self, gamestate):
-        turnsources_ready = [turnsource.turn_ready(len(gamestate_record)-1) for
+        next_index = len(self.gamestate_record)-1
+        turnsources_ready = [turnsource.turn_ready(next_index) for
                              turnsource in self.turnsources]
         ready = all(turnsources_ready)
         if ready:
@@ -94,7 +95,8 @@ class Gameflow:
         return False
 
     def submit_local_turn(self, turn):
-        self.local_turnsource.submit_turn(turn, len(gamestate_record)-1)
+        next_index = len(self.gamestate_record)-1
+        self.local_turnsource.submit_turn(turn, next_index)
 
 
 

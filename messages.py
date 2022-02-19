@@ -82,7 +82,7 @@ class ReportTurnRequest(Message):
     def handle_on_server(self, server):
         if (len(server.turns) == self.turn_index):
             server.turns.append(gameplay.build_gameturn([]))
-        elif self.turn_index > len(server_turns):
+        elif self.turn_index > len(server.turns):
             raise Exception("Turn index " + str(self.turn_index) + "is two " +
                             "or more turns into the future.")
 
@@ -107,15 +107,21 @@ class TurnPollRequest(Message):
     turn_index: int
 
     def handle_on_server(self, server):
+        if (len(server.turns) == self.turn_index):
+            server.turns.append(gameplay.build_gameturn([]))
+        elif self.turn_index > len(server.turns):
+            raise Exception("Turn index " + str(self.turn_index) + "is two " +
+                            "or more turns into the future.")
+        
         turn = server.turns[self.turn_index]
         turn_complete = True
         for player in server.players:
             turn_complete = turn_complete and turn.contains_player(player)
 
-        response_turn = response_turn if turn_complete else None
+        response_turn = turn if turn_complete else None
         
         response = TurnPollResponse(gameturn=response_turn,
-                                    turn_index=turn_index)
+                                    turn_index=self.turn_index)
         return response
     
     def message_type(self):
