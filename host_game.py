@@ -15,6 +15,7 @@ from typing import List
 class ServerState:
     def __init__(self):
         self.players = list()
+        self.turns = list()
         self.starting_gamestate = None
 serverState = ServerState()
     

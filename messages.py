@@ -77,6 +77,22 @@ class GameStartPollResponse(Message):
 @dataclass(eq=False)
 class ReportTurnRequest(Message):
     gameturn: gameplay.Gameturn
+    turn_index: int
+
+    def handle_on_server(self, server):
+        if (len(server.turns) == self.turn_index):
+            server.turns.append(gameplay.build_gameturn([]))
+        elif self.turn_index > len(server_turns):
+            raise Exception("Turn index " + str(self.turn_index) + "is two " +
+                            "or more turns into the future.")
+
+        existing_turn = server.turns[self.turn_index]
+        
+        server.turns[self.turn_index] = gameplay.merge_turns([existing_turn,
+                                                              self.gameturn])
+        
+        response = ReportTurnResponse()
+        return response
     
     def message_type(self):
         return "messages.ReportTurnRequest"
@@ -88,10 +104,27 @@ class ReportTurnResponse(Message):
 
 @dataclass(eq=False)
 class TurnPollRequest(Message):
+    turn_index: int
+
+    def handle_on_server(self, server):
+        turn = server.turns[self.turn_index]
+        turn_complete = True
+        for player in server.players:
+            turn_complete = turn_complete and turn.contains_player(player)
+
+        response_turn = response_turn if turn_complete else None
+        
+        response = TurnPollResponse(gameturn=response_turn,
+                                    turn_index=turn_index)
+        return response
+    
     def message_type(self):
         return "messages.TurnPollRequest"
 
 @dataclass(eq=False)
 class TurnPollResponse(Message):
+    gameturn: Optional[gameplay.Gameturn]
+    turn_index: int
+    
     def message_type(self):
         return "messages.TurnPollResponse"

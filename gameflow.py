@@ -1,40 +1,61 @@
 import copy
+import time
 
 from uuid import uuid4
 
 import gameplay
 import game_io
+import networking
+import messages
 
 
 class Turnsource:
     def __init__(self):
         self.player_number = None # gets set when added to a gameflow
 
-    def turn_ready(self):
+    def turn_ready(self, turn_index):
         raise Exception("turn_ready called on Turnsource superclass.")
 
     def get_turn(self):
         raise Exception("get_turn called on Turnsource superclass.")
 
 class LocalTurnsource(Turnsource):
-    def submit_turn(self, turn):
+    def submit_turn(self, turn, turn_index):
         self.turn = turn
+        networking.send_message(ReportTurnRequest(gameturn=turn,
+                                                  turn_index=turn_index))
 
-    def turn_ready(self):
+    def turn_ready(self, turn_index):
         return self.turn != None
 
     def get_turn(self):
         return self.turn
 
-class InternetTurnsource(Turnsource):
+class InternetTurnsource(Turnsource):    
     def __init__(self):
-        pass
+        self.turn = turn
+        self.response_protocol = None
+        self.last_request_time = 0
 
-    def turn_ready(self):
-        return True
+    def turn_ready(self, turn_index):
+        if (self.response_protocol != None
+            and self.response_protocol.response != None
+            and self.response_protocol.response.gameturn != None):
+            return True
+        
+        if (self.response_protocol != None
+            and self.response_protocol.response != None
+            and self.response_protocol.response.gameturn == None):
+            self.response_protocol = None
+        
+        if ((time.time() - self.last_request_time) > 5
+             and self.response_protocol == None):
+            self.response_protocol = networking.send_message(
+                TurnPollRequest(turn_index=turn_index))
+            self.last_request_time = time.time()
 
     def get_turn(self):
-        return gameplay.build_gameturn([])
+        return self.response_protocol.response.gameturn
 
 class Gameflow:
     def __init__(self, local_player_number, starting_gamestate):
@@ -51,7 +72,6 @@ class Gameflow:
         self.gamestate_record = [copy.deepcopy(starting_gamestate)]
         self.tick = 0
 
-
     def get_local_player(self, gamestate):
         for player in gamestate.players:
             if player.player_number == self.local_turnsource.player_number:
@@ -62,7 +82,7 @@ class Gameflow:
     return True iff the turn has been successfully advanced
     '''
     def try_to_advance_turn(self, gamestate):
-        turnsources_ready = [turnsource.turn_ready() for
+        turnsources_ready = [turnsource.turn_ready(len(gamestate_record)-1) for
                              turnsource in self.turnsources]
         ready = all(turnsources_ready)
         if ready:
@@ -74,7 +94,7 @@ class Gameflow:
         return False
 
     def submit_local_turn(self, turn):
-        self.local_turnsource.submit_turn(turn)
+        self.local_turnsource.submit_turn(turn, len(gamestate_record)-1)
 
 
 

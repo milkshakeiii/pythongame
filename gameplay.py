@@ -690,6 +690,9 @@ class Gameturn:
     def part_active(self, player, unit, part):
         return (unit in self[player]) and (part in self[player][unit])
 
+    def contains_player(self, player):
+        return (player in self.players_to_units_to_parts_to_actions)
+
     def __getitem__(self, key):
         return self.players_to_units_to_parts_to_actions[key]
 
@@ -713,6 +716,9 @@ class Gameturn:
 
         return (pending_energy, true_energy, max_energy, gain_energy)
 
+'''
+higher indexed player turns overwrite lower indexed ones if duplicates exist
+'''
 def merge_turns(turns):
     merged_turn = build_gameturn([])
     for turn in turns:
