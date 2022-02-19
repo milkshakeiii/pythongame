@@ -12,8 +12,6 @@ import gameplay
 import gameflow
 import messages
 
-crochet.setup()
-
 class MessageProtocol(NetstringReceiver):
     def __init__(self, request):
         self.request = request

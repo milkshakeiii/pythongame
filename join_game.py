@@ -6,6 +6,10 @@ import gameflow
 
 import time
 
+import crochet
+
+crochet.setup()
+
 team_name = input("Welcome.  Please input your team name: ")
 me = game_io.player_from_team(team_name)
         
