@@ -703,7 +703,7 @@ def run_game(gameflow, gamestate):
 
     local_player = gameflow.get_local_player(gamestate)
     research_window.draw_player_info(local_player)
-    working_turn = gameplay.build_gameturn(gamestate.players)
+    working_turn = gameplay.build_gameturn([local_player])
 
     turn_submitted = False
     frame = 0

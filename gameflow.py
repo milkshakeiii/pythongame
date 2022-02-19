@@ -54,6 +54,8 @@ class InternetTurnsource(Turnsource):
                 messages.TurnPollRequest(turn_index=turn_index))
             self.last_request_time = time.time()
 
+        return False
+
     def get_turn(self):
         return self.response_protocol.response.gameturn
 

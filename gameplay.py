@@ -727,7 +727,7 @@ def merge_turns(turns):
     return merged_turn
 
 def default_turn_for(gamestate, player, working_turn):
-    default_turn = build_gameturn(gamestate.players)
+    default_turn = build_gameturn([player])
     for unit in working_turn[player]:
         for part in working_turn[player][unit]:
             action = working_turn[player][unit][part]
