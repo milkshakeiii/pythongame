@@ -80,6 +80,7 @@ class ReportTurnRequest(Message):
     turn_index: int
 
     def handle_on_server(self, server):
+        print(self.turn_index)
         if (len(server.turns) == self.turn_index):
             server.turns.append(gameplay.build_gameturn([]))
         elif self.turn_index > len(server.turns):
@@ -107,6 +108,7 @@ class TurnPollRequest(Message):
     turn_index: int
 
     def handle_on_server(self, server):
+        print(self.turn_index)
         if (len(server.turns) == self.turn_index):
             server.turns.append(gameplay.build_gameturn([]))
         elif self.turn_index > len(server.turns):

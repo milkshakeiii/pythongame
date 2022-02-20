@@ -57,7 +57,9 @@ class InternetTurnsource(Turnsource):
         return False
 
     def get_turn(self):
-        return self.response_protocol.response.gameturn
+        turn = self.response_protocol.response.gameturn
+        self.response_protocol = None
+        return turn
 
 class Gameflow:
     def __init__(self, local_player_number, starting_gamestate):

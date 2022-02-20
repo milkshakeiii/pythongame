@@ -753,6 +753,8 @@ def unit_production_legal(builder, buildee, player):
     return unit_unlocked and size_appropriate and enough_resources
 
 def advance_gamestate_via_mutation(gamestate, do_turn):
+    print(gamestate)
+    print(do_turn)
     def do_blast():
         shape_type = shape_enum_to_object(part.shape_type)
         for path in shape_type.blast_paths(unit.coords, part.size, unit.size):
