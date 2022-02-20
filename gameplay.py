@@ -600,10 +600,14 @@ class EnergyCore(Part):
 class Producer(Part):
     under_production: Optional[Unit]
     current_production_points: int
-    units_produced_count: int
+    evolved_uuids_counter: int
     spot_4_decoy: int
     spot_5_decoy: int
     spot_6_decoy: int
+
+    def get_evolved_uuid_seed(self):
+        self.evolved_uuids_counter += 1
+        return int(self.uuid) * self.evolved_uuids_counter
 
     def size_under_production(self):
         return self.under_production.size
@@ -662,7 +666,7 @@ def producer_action_factory(produced_unit, out_coords):
 @dataclass(eq=False)
 class ProducerAction(Action):
     produced_unit: Unit
-    out_coords: tuple
+    out_coords: Tuple[int, int]
     spot_3_decoy: int
     spot_4_decoy: int
     spot_5_decoy: int
@@ -808,7 +812,9 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
         part.under_production = action.produced_unit
         if part.next_activation_produces():
             new_unit = deepcopy(action.produced_unit)
-            new_unit.evolve_uuid(int(part.uuid) * part.units_produced_count)
+            new_unit.evolve_uuid(part.get_evolved_uuid_seed())
+            for new_part in new_unit.parts:
+                new_part.evolve_uuid(part.get_evolved_uuid_seed())
             new_unit.coords = action.out_coords
             new_unit.owner_player_number = unit.owner_player_number
             new_unit.owner_team_number = unit.owner_team_number
