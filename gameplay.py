@@ -168,12 +168,14 @@ class Unit(Placeable):
 
     def try_pay_energy(self, part, action):
         amount_to_pay = action.energy_cost(part)
+        print(amount_to_pay)
 
         amount_available = 0
         for core in self.parts:
             if core.is_core():
                 amount_available += core.current_energy
 
+        print(amount_available)
         if (amount_available >= amount_to_pay):
             self.pay_energy(part, action)
             return True
@@ -699,6 +701,33 @@ class Gameturn:
     def __setitem__(self, key, value):
         self.players_to_units_to_parts_to_actions[key] = value
 
+    def align_units(self, gamestate):
+        new_dict = {}
+        for player, unit_dict in self.players_to_units_to_parts_to_actions.items():
+            new_dict[player] = dict()
+            for unit, part_dict in unit_dict.items():
+                placeables = gamestate.gameboard.squares[unit.coords]
+                replacement_unit = None
+                for placeable in placeables:
+                    if placeable == unit:
+                        replacement_unit = placeable
+                if replacement_unit == None:
+                    raise Exception("Unit from turn not found on gameboard")
+                new_dict[player][replacement_unit] = dict()
+                for part, action in part_dict.items():
+                    replacement_part = None
+                    print("want: " + str(part.uuid))
+                    for replacement_candidate in replacement_unit.parts:
+                        print ("found: " + str(replacement_candidate.uuid))
+                        if replacement_candidate == part:
+                            replacement_part = replacement_candidate
+                    if replacement_part == None:
+                        raise Exception("Expected part not found.")
+                    new_dict[player][replacement_unit][replacement_part] = action
+
+        self.players_to_units_to_parts_to_actions = new_dict
+                    
+
     def unit_pending_true_max_gain_energy(self, player, unit):
         parts = unit.parts
         max_energy = 0
@@ -753,8 +782,8 @@ def unit_production_legal(builder, buildee, player):
     return unit_unlocked and size_appropriate and enough_resources
 
 def advance_gamestate_via_mutation(gamestate, do_turn):
-    print(gamestate)
-    print(do_turn)
+    do_turn.align_units(gamestate)
+    
     def do_blast():
         shape_type = shape_enum_to_object(part.shape_type)
         for path in shape_type.blast_paths(unit.coords, part.size, unit.size):
@@ -880,13 +909,23 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
     stationary_units = set()
     moving_units = set()
     #fill moving_units
-    for player in turn_dict: 
+    for player in turn_dict:
+        print("player")
+        print(player)
         for unit in turn_dict[player]:
+            print("unit")
+            print(unit)
             for part in turn_dict[player][unit]:
+                print("part")
+                print(part)
                 action = turn_dict[player][unit][part]
+                print(action.is_locomotor())
+                print(part.is_functional())
                 if (action.is_locomotor() and
                     part.is_functional() and
                     unit.try_pay_energy(part, action)):
+                    print("moving")
+                    print(unit)
                     moving_units.add(unit)
 
     #fill blocked_squares and start_squares and stationary_units
@@ -911,12 +950,15 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
                 action = turn_dict[player][unit][part]
                 if action.is_locomotor() and unit in moving_units:
                     if path_clear():
+                        print("doing move")
+                        print(unit)
                         gamestate.gameboard.remove_from_board(unit)
                         unit.coords = (unit.coords[0] + action.move_target[0],
                                        unit.coords[1] + action.move_target[1])
                         gamestate.gameboard.add_to_board(unit)
 
     while gamestate.gameboard.conflicts_exist():
+        print("conflict")
         # while overlap exists, unmove everyone but the highest priority unit
         for coords, placeables in gamestate.gameboard.squares.items():
             units = [p for p in placeables if p.is_unit()]
