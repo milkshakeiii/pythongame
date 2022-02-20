@@ -4,6 +4,7 @@ from typing import Dict, List, Tuple, Optional, Union
 from enum import Enum
 from copy import deepcopy
 from uuid import UUID, uuid4
+from random import Random
 
 class ShapeTypeEnum(Enum):
     BISHOP = 1
@@ -28,6 +29,11 @@ def shape_enum_to_object(enum: ShapeTypeEnum):
 @dataclass(eq=False)
 class NetHashable:
     uuid: UUID
+
+    def evolve_uuid(self, seed):
+        rng = Random()
+        rng.seed(seed)
+        self.uuid = UUID(int=rng.getrandbits(128))
     
     def __eq__(self, other):
         if (other == None):
@@ -168,14 +174,12 @@ class Unit(Placeable):
 
     def try_pay_energy(self, part, action):
         amount_to_pay = action.energy_cost(part)
-        print(amount_to_pay)
 
         amount_available = 0
         for core in self.parts:
             if core.is_core():
                 amount_available += core.current_energy
 
-        print(amount_available)
         if (amount_available >= amount_to_pay):
             self.pay_energy(part, action)
             return True
@@ -596,7 +600,7 @@ class EnergyCore(Part):
 class Producer(Part):
     under_production: Optional[Unit]
     current_production_points: int
-    spot_3_decoy: int
+    units_produced_count: int
     spot_4_decoy: int
     spot_5_decoy: int
     spot_6_decoy: int
@@ -716,9 +720,7 @@ class Gameturn:
                 new_dict[player][replacement_unit] = dict()
                 for part, action in part_dict.items():
                     replacement_part = None
-                    print("want: " + str(part.uuid))
                     for replacement_candidate in replacement_unit.parts:
-                        print ("found: " + str(replacement_candidate.uuid))
                         if replacement_candidate == part:
                             replacement_part = replacement_candidate
                     if replacement_part == None:
@@ -806,6 +808,7 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
         part.under_production = action.produced_unit
         if part.next_activation_produces():
             new_unit = deepcopy(action.produced_unit)
+            new_unit.evolve_uuid(int(part.uuid) * part.units_produced_count)
             new_unit.coords = action.out_coords
             new_unit.owner_player_number = unit.owner_player_number
             new_unit.owner_team_number = unit.owner_team_number
@@ -910,22 +913,12 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
     moving_units = set()
     #fill moving_units
     for player in turn_dict:
-        print("player")
-        print(player)
         for unit in turn_dict[player]:
-            print("unit")
-            print(unit)
             for part in turn_dict[player][unit]:
-                print("part")
-                print(part)
                 action = turn_dict[player][unit][part]
-                print(action.is_locomotor())
-                print(part.is_functional())
                 if (action.is_locomotor() and
                     part.is_functional() and
                     unit.try_pay_energy(part, action)):
-                    print("moving")
-                    print(unit)
                     moving_units.add(unit)
 
     #fill blocked_squares and start_squares and stationary_units
@@ -950,15 +943,12 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
                 action = turn_dict[player][unit][part]
                 if action.is_locomotor() and unit in moving_units:
                     if path_clear():
-                        print("doing move")
-                        print(unit)
                         gamestate.gameboard.remove_from_board(unit)
                         unit.coords = (unit.coords[0] + action.move_target[0],
                                        unit.coords[1] + action.move_target[1])
                         gamestate.gameboard.add_to_board(unit)
 
     while gamestate.gameboard.conflicts_exist():
-        print("conflict")
         # while overlap exists, unmove everyone but the highest priority unit
         for coords, placeables in gamestate.gameboard.squares.items():
             units = [p for p in placeables if p.is_unit()]

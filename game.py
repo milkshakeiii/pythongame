@@ -1,6 +1,8 @@
 from enum import Enum
 
 import pygame
+import crochet
+
 import sys, os, ctypes
 import copy
 
@@ -781,6 +783,7 @@ def run_game(gameflow, gamestate):
 
 
 if __name__=='__main__':
+    crochet.setup()
     starting_gamestate = gameflow.test_gamestate()
     gameflow = gameflow.Gameflow(0, starting_gamestate)
     run_game(gameflow, starting_gamestate)

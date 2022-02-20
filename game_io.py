@@ -159,7 +159,7 @@ def unit_prototype_from_file(team_name, unit_name):
                             damage=0,
                             under_production=None,
                             current_production_points=0,
-                            spot_3_decoy=0,
+                            units_produced_count=0,
                             spot_4_decoy=0,
                             spot_5_decoy=0,
                             spot_6_decoy=0,)
