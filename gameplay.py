@@ -709,10 +709,16 @@ class Gameturn:
     def __setitem__(self, key, value):
         self.players_to_units_to_parts_to_actions[key] = value
 
-    def align_units(self, gamestate):
+    def align_net_objects(self, gamestate):
         new_dict = {}
         for player, unit_dict in self.players_to_units_to_parts_to_actions.items():
-            new_dict[player] = dict()
+            replacement_player = None
+            for candidate_player in gamestate.players:
+                if candidate_player == player:
+                    replacement_player = candidate_player
+            if replacement_player == None:
+                raise Exception("Expected player not found in gamestate.")
+            new_dict[replacement_player] = dict()
             for unit, part_dict in unit_dict.items():
                 placeables = gamestate.gameboard.squares[unit.coords]
                 replacement_unit = None
@@ -729,7 +735,7 @@ class Gameturn:
                             replacement_part = replacement_candidate
                     if replacement_part == None:
                         raise Exception("Expected part not found.")
-                    new_dict[player][replacement_unit][replacement_part] = action
+                    new_dict[replacement_player][replacement_unit][replacement_part] = action
 
         self.players_to_units_to_parts_to_actions = new_dict
                     
@@ -788,7 +794,7 @@ def unit_production_legal(builder, buildee, player):
     return unit_unlocked and size_appropriate and enough_resources
 
 def advance_gamestate_via_mutation(gamestate, do_turn):
-    do_turn.align_units(gamestate)
+    do_turn.align_net_objects(gamestate)
     
     def do_blast():
         shape_type = shape_enum_to_object(part.shape_type)
