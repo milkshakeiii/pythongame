@@ -170,6 +170,7 @@ def test_gamestate():
     gameboard.add_to_board(test_resource)
 
     test_player = game_io.player_from_team("test_team_1")
+    test_player.resource_amount = 100
 
     test_unit = gameplay.get_mothership(test_player)
     test_unit.coords = (5, 5)

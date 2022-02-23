@@ -804,19 +804,20 @@ def merge_turns(turns):
 def default_turn_for(gamestate, player, working_turn):
     default_turn = build_gameturn([player])
     for unit in working_turn[player]:
-        for part in working_turn[player][unit]:
-            action = working_turn[player][unit][part]
-            if action.is_researcher():
-                new_action = researcher_action_factory()
-                default_turn.add_action(player, unit, part, new_action)
-            elif action.is_collector():
-                new_action = collector_action_factory()
-                default_turn.add_action(player, unit, part, new_action)
-            elif (action.is_producer() and
-                  part.under_production == action.produced_unit):
-                new_action = producer_action_factory(action.produced_unit,
-                                                     action.out_coords)
-                default_turn.add_action(player, unit, part, new_action)
+        if gamestate.gameboard.get_single_occupant(unit.coords) == unit:
+            for part in working_turn[player][unit]:
+                action = working_turn[player][unit][part]
+                if action.is_researcher():
+                    new_action = researcher_action_factory()
+                    default_turn.add_action(player, unit, part, new_action)
+                elif action.is_collector():
+                    new_action = collector_action_factory()
+                    default_turn.add_action(player, unit, part, new_action)
+                elif (action.is_producer() and
+                      part.under_production == action.produced_unit):
+                    new_action = producer_action_factory(action.produced_unit,
+                                                         action.out_coords)
+                    default_turn.add_action(player, unit, part, new_action)
     return default_turn
 
 def unit_production_legal(builder, buildee, player):
@@ -834,14 +835,16 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
         shape_type = shape_enum_to_object(part.shape_type)
         blast_paths = shape_type.blast_paths(unit.coords, part.size, unit.size)
         blast_path = blast_paths[action.blast_index]
+        already_blasted = set()
         for square in blast_path:
             occupant = gamestate.gameboard.get_single_occupant(square)
             if not occupant:
                 continue
             elif occupant.is_wall():
                 break
-            elif occupant.is_unit():
+            elif occupant.is_unit() and not (occupant in already_blasted):
                 occupant.receive_damage(part.damage_dealt())
+                already_blasted.add(occupant)
 
     def do_production():
         if (part.under_production != action.produced_unit):
