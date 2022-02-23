@@ -73,6 +73,9 @@ class Part(NetHashable):
     quality: float
     damage: int
 
+    def display_name(self):
+        raise Exception("Part superclass has no display name.")
+
     def max_hp(self):
         return int(self.size*10*self.quality)
 
@@ -194,6 +197,19 @@ class Unit(Placeable):
                 sum([part.size for part in self.parts]),
                 self.owner_player_number)
 
+def get_mothership_prototype(player):
+    for unit in player.unit_prototypes:
+        if unit.research_threshhold == 0 and unit.production_cost == 0:
+            return unit
+    raise Exception("No mothership found.")
+
+def get_mothership(player):
+    mothership_prototype = get_mothership_prototype(player)
+    mothership = copy.deepcopy(mothership_prototype)
+    mothership.set_owner(player)
+    mothership.uuid = uuid4()
+    return mothership
+
 @dataclass(eq=False)
 class Player(NetHashable):
     player_number: int
@@ -285,6 +301,9 @@ class Gamestate:
     players: List[Player]
 
 class ShapeType():
+    def display_name(self):
+        raise Exception("ShapeType superclass has no display name.")
+    
     '''
     move_paths implementations return a list of paths
     where a path is a list of coords each of which
@@ -316,6 +335,9 @@ def direct_path_move_path(start_coord, part_size, steps, unit_size):
     return result
 
 class Bishop(ShapeType):
+    def display_name(self):
+        return "Bishop"
+    
     def move_paths(self, start_coord, part_size, unit_size):
         return direct_path_move_path(start_coord,
                                      part_size,
@@ -323,6 +345,9 @@ class Bishop(ShapeType):
                                      unit_size)
 
 class Rook(ShapeType):
+    def display_name(self):
+        return "Rook"
+    
     def move_paths(self, start_coord, part_size, unit_size):
         return direct_path_move_path(start_coord,
                                      part_size,
@@ -330,6 +355,9 @@ class Rook(ShapeType):
                                      unit_size)
 
 class Knight(ShapeType):
+    def display_name(self):
+        return "Knight"
+    
     def move_paths(self, start_coord, part_size, unit_size):
         return direct_path_move_path(start_coord,
                                      part_size,
@@ -338,6 +366,9 @@ class Knight(ShapeType):
                                      unit_size)
 
 class King(ShapeType):
+    def display_name(self):
+        return "King"
+    
     def move_paths(self, start_coord, part_size, unit_size):
         many_paths = []
         for i in range(-part_size, part_size):
@@ -358,6 +389,9 @@ class King(ShapeType):
         return [blast]
 
 class Queen(ShapeType):
+    def display_name(self):
+        return "Queen"
+    
     def move_paths(self, start_coord, part_size, unit_size):
         return direct_path_move_path(start_coord,
                                      part_size,

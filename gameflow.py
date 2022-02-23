@@ -108,13 +108,6 @@ def first_arena(players):
     if len(players) != 2:
         raise Exception("Exactly two players required.  Found " +
                         str(len(players)) + ".")
-
-    def get_mothership(player):
-        for unit in player.unit_prototypes:
-            if unit.research_threshhold == 0 and unit.production_cost == 0:
-                mothership = copy.deepcopy(unit)
-                mothership.set_owner(player)
-                return mothership
     
     gameboard = gameplay.Gameboard(squares=dict())
     mothership_one = None
@@ -124,10 +117,10 @@ def first_arena(players):
     for player in players:
         if player.player_number == 1:
             player_one = player
-            mothership_one = get_mothership(player)
+            mothership_one = gameplay.get_mothership(player)
         if player.player_number == 2:
             player_two = player
-            mothership_two = get_mothership(player)
+            mothership_two = gameplay.get_mothership(player)
 
     if not all([variable != None for variable in [mothership_one,
                                                   mothership_two,
