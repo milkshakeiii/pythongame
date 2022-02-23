@@ -832,15 +832,16 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
     
     def do_blast():
         shape_type = shape_enum_to_object(part.shape_type)
-        for path in shape_type.blast_paths(unit.coords, part.size, unit.size):
-            for square in path:
-                occupant = gamestate.gameboard.get_single_occupant(square)
-                if not occupant:
-                    continue
-                elif occupant.is_wall():
-                    break
-                elif occupant.is_unit():
-                    occupant.receive_damage(part.damage_dealt())
+        blast_paths = shape_type.blast_paths(unit.coords, part.size, unit.size)
+        blast_path = blast_paths[action.blast_index]
+        for square in blast_path:
+            occupant = gamestate.gameboard.get_single_occupant(square)
+            if not occupant:
+                continue
+            elif occupant.is_wall():
+                break
+            elif occupant.is_unit():
+                occupant.receive_damage(part.damage_dealt())
 
     def do_production():
         if (part.under_production != action.produced_unit):
