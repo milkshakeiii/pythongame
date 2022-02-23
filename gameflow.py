@@ -168,30 +168,11 @@ def test_gamestate():
     gameboard.add_to_board(test_resource)
     test_resource = game_io.resource_pile_factory((12,7), 100)
     gameboard.add_to_board(test_resource)
-    test_unit = game_io.unit_prototype_from_file("test_team_1", "mothership_1")
+
+    test_player = game_io.player_from_team("test_team_1")
+
+    test_unit = gameplay.get_mothership(test_player)
     test_unit.coords = (5, 5)
     gameboard.add_to_board(test_unit)
-    test_unit_2 = game_io.unit_prototype_from_file("test_team_1", "small_1")
-    test_unit_2.coords = (10, 15)
-    gameboard.add_to_board(test_unit_2)
-    test_unit_3 = game_io.unit_prototype_from_file("test_team_1", "big_1")
-    test_unit_3.coords = (5, 20)
-    gameboard.add_to_board(test_unit_3)
-    test_unit_4 = game_io.unit_prototype_from_file("test_team_1", "small_2")
-    test_unit_4.coords = (20, 5)
-    gameboard.add_to_board(test_unit_4)
-
-
-    test_army = [game_io.unit_prototype_from_file("test_team_1", "mothership_1"),
-                 game_io.unit_prototype_from_file("test_team_1", "small_1"),
-                 game_io.unit_prototype_from_file("test_team_1", "small_2"),
-                 game_io.unit_prototype_from_file("test_team_1", "big_1")]
-
-    test_player = gameplay.Player(uuid=uuid4(),
-                                  player_number=0,
-                                  team_number=0,
-                                  unit_prototypes=test_army,
-                                  resource_amount=100,
-                                  research_amount=1000)
 
     return gameplay.Gamestate(gameboard=gameboard, players=[test_player])
