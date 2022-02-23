@@ -39,7 +39,7 @@ def send_message(message):
     message_container_string = jsons.dumps(
         messages.MessageContainer(message=message_string,
                          message_type=message.message_type()))
-    point = TCP4ClientEndpoint(reactor, "localhost", 8007)
+    point = TCP4ClientEndpoint(reactor, "18.215.153.187", 8007)
     message_protocol = MessageProtocol(message_container_string)
     connectProtocol(point, message_protocol)
     return message_protocol
