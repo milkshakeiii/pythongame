@@ -205,7 +205,7 @@ def get_mothership_prototype(player):
 
 def get_mothership(player):
     mothership_prototype = get_mothership_prototype(player)
-    mothership = copy.deepcopy(mothership_prototype)
+    mothership = deepcopy(mothership_prototype)
     mothership.set_owner(player)
     mothership.uuid = uuid4()
     return mothership
