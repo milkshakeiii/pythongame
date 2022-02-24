@@ -531,7 +531,7 @@ class Armament(Part):
         return (1/self.quality) * self.size
 
     def damage_dealt(self):
-        return 10
+        return 10 * self.size
 
     def display_name(self):
         return "Armament"
