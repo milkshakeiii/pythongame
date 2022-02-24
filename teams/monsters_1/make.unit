@@ -3,7 +3,7 @@ image: 4x4monster1
 production_cost: 10
 research_threshhold: 0
 part: producer
-	part_size: 10
+	part_size: 8
 	part_quality: 1
 part: locomotor
 	part_size: 3

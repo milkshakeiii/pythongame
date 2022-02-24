@@ -22,8 +22,8 @@ def base_cost(unit, indentation):
             part_message += " (" + shape_type.display_name() + ")"
         part_message += " Size: " + str(part.size)
         part_message += " Quality: " + str(part.quality)
-        cost = 10 + (part.size - unit.size) * 4
-        cost += part.quality
+        cost = 10 + max(0, (part.size - unit.size) * 4)
+        cost *= (part.quality + 0.5)
         part_message += " Cost: " + str(cost)
         indented_print(part_message, indentation+2)
         total_cost += cost

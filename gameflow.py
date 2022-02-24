@@ -164,12 +164,12 @@ def test_gamestate():
     gameboard = gameplay.Gameboard(squares=dict())
     test_resource = game_io.resource_pile_factory((6,6), 50)
     gameboard.add_to_board(test_resource)
-    test_resource = game_io.resource_pile_factory((6,7), 4)
+    test_resource = game_io.resource_pile_factory((6,7), 400)
     gameboard.add_to_board(test_resource)
     test_resource = game_io.resource_pile_factory((12,7), 100)
     gameboard.add_to_board(test_resource)
 
-    test_player = game_io.player_from_team("test_team_1")
+    test_player = game_io.player_from_team("monsters_1")
     test_player.resource_amount = 100
 
     test_unit = gameplay.get_mothership(test_player)
