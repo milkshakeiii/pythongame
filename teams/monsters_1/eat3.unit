@@ -1,0 +1,15 @@
+size: 3
+image: 3x3monster1
+production_cost: 30
+research_threshhold: 0.3
+part: locomotor
+	part_size: 4
+	part_quality: 0.5
+	part_shape: rook
+part: core
+	part_size: 2
+	part_quality: 0.5
+part: armament
+	part_size: 5
+	part_quality: 0.7
+	part_shape: queen

@@ -1,0 +1,15 @@
+size: 1
+image: 1x1monster2
+production_cost: 10
+research_threshhold: 0.2
+part: locomotor
+	part_size: 2
+	part_quality: 0.5
+	part_shape: rook
+part: core
+	part_size: 1
+	part_quality: 0.5
+part: armament
+	part_size: 3
+	part_quality: 0.7
+	part_shape: rook

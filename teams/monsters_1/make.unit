@@ -1,0 +1,17 @@
+size: 4
+image: 4x4monster1
+production_cost: 10
+research_threshhold: 0
+part: producer
+	part_size: 10
+	part_quality: 1
+part: locomotor
+	part_size: 3
+	part_quality: 0.5
+	part_shape: knight
+part: core
+	part_size: 3
+	part_quality: 0.5 
+part: collector
+	part_size: 3
+	part_quality: 0.5

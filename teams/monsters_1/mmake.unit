@@ -1,0 +1,17 @@
+size: 5
+image: 5x5monster1
+production_cost: 0
+research_threshhold: 0
+part: locomotor
+	part_size: 5
+	part_quality: 0.5
+	part_shape: bishop
+part: core
+	part_size: 5
+	part_quality: 0.5 
+part: researcher
+	part_size: 5
+	part_quality: 0.3
+part: producer
+	part_size: 5
+	part_quality: 0.7
