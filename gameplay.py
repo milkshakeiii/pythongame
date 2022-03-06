@@ -195,7 +195,8 @@ class Unit(Placeable):
     def movement_priority(self):
         return (self.size,
                 sum([part.size for part in self.parts]),
-                self.owner_player_number)
+                self.owner_player_number,
+                int(self.uuid))
 
 def get_mothership_prototype(player):
     for unit in player.unit_prototypes:
@@ -743,6 +744,9 @@ class Gameturn:
     def __setitem__(self, key, value):
         self.players_to_units_to_parts_to_actions[key] = value
 
+    '''
+    replace the turn's objects with objects of corresponding UUID from gamestate
+    '''
     def align_net_objects(self, gamestate):
         new_dict = {}
         for player, unit_dict in self.players_to_units_to_parts_to_actions.items():
