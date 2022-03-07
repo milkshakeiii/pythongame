@@ -913,42 +913,46 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
     # researchers
     for player in turn_dict:
         for unit in turn_dict[player]:
-            for part in turn_dict[player][unit]:
-                action = turn_dict[player][unit][part]
-                if (action.is_researcher() and
-                    part.is_functional() and
-                    unit.try_pay_energy(part, action)):
-                    do_research()
+            for part in unit.parts:
+                if part in turn_dict[player][unit]:
+                    action = turn_dict[player][unit][part]
+                    if (action.is_researcher() and
+                        part.is_functional() and
+                        unit.try_pay_energy(part, action)):
+                        do_research()
 
     # collectors
     for player in turn_dict:
         for unit in turn_dict[player]:
-            for part in turn_dict[player][unit]:
-                action = turn_dict[player][unit][part]
-                if (action.is_collector() and
-                    part.is_functional() and
-                    unit.try_pay_energy(part, action)):
-                    do_collection()
+            for part in unit.parts:
+                if part in turn_dict[player][unit]:
+                    action = turn_dict[player][unit][part]
+                    if (action.is_collector() and
+                        part.is_functional() and
+                        unit.try_pay_energy(part, action)):
+                        do_collection()
 
     # armaments
     for player in turn_dict:
         for unit in turn_dict[player]:
-            for part in turn_dict[player][unit]:
-                action = turn_dict[player][unit][part]
-                if (action.is_armament() and
-                    part.is_functional() and
-                    unit.try_pay_energy(part, action)):
-                    do_blast()
+            for part in unit.parts:
+                if part in turn_dict[player][unit]:
+                    action = turn_dict[player][unit][part]
+                    if (action.is_armament() and
+                        part.is_functional() and
+                        unit.try_pay_energy(part, action)):
+                        do_blast()
 
     # producers
     for player in turn_dict:
         for unit in turn_dict[player]:
-            for part in turn_dict[player][unit]:
-                action = turn_dict[player][unit][part]
-                if (action.is_producer() and
-                    part.is_functional() and
-                    unit.try_pay_energy(part, action)):
-                    do_production()
+            for part in unit.parts:
+                if part in turn_dict[player][unit]:
+                    action = turn_dict[player][unit][part]
+                    if (action.is_producer() and
+                        part.is_functional() and
+                        unit.try_pay_energy(part, action)):
+                        do_production()
 
     # removal of destroyed units
     for placeables in gamestate.gameboard.squares.values():
@@ -993,18 +997,21 @@ def advance_gamestate_via_mutation(gamestate, do_turn):
     # move all units to their destination if not blocked
     for player in turn_dict:
         for unit in turn_dict[player]:
-            for part in turn_dict[player][unit]:
-                action = turn_dict[player][unit][part]
-                if action.is_locomotor() and unit in moving_units:
-                    if path_clear():
-                        gamestate.gameboard.remove_from_board(unit)
-                        unit.coords = (unit.coords[0] + action.move_target[0],
-                                       unit.coords[1] + action.move_target[1])
-                        gamestate.gameboard.add_to_board(unit)
+            for part in unit.parts:
+                if part in turn_dict[player][unit]:
+                    action = turn_dict[player][unit][part]
+                    if action.is_locomotor() and unit in moving_units:
+                        if path_clear():
+                            gamestate.gameboard.remove_from_board(unit)
+                            unit.coords = ((unit.coords[0]
+                                               + action.move_target[0]),
+                                           (unit.coords[1]
+                                               + action.move_target[1]))
+                            gamestate.gameboard.add_to_board(unit)
 
     while gamestate.gameboard.conflicts_exist():
         # while overlap exists, unmove everyone but the highest priority unit
-        for coords, placeables in gamestate.gameboard.squares.items():
+        for coords, placeables in sorted(gamestate.gameboard.squares.items()):
             units = [p for p in placeables if p.is_unit()]
             if len(units) <= 1:
                 continue
